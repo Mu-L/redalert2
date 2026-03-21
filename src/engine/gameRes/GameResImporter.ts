@@ -18,11 +18,11 @@ import { RealFileSystemDir } from '../../data/vfs/RealFileSystemDir';
 import { NoWebAssemblyError } from './importError/NoWebAssemblyError';
 import { HttpRequest, DownloadError } from '../../network/HttpRequest';
 import { ArchiveDownloadError } from './importError/ArchiveDownloadError';
+import { toOwnedUint8Array } from '../../data/BufferUtils';
 import type { Config } from '../../Config';
 import type { Strings } from '../../data/Strings';
 import type { DataStream } from '../../data/DataStream';
 import type { FFmpeg } from '@ffmpeg/ffmpeg';
-import { OriginalMixFile } from '../../test/OriginalMixFile';
 interface SevenZipWasmModule {
     FS: any;
     callMain: (args: string[]) => void;
@@ -403,7 +403,6 @@ export class GameResImporter {
                         continue;
                     }
                     if (mp3Data) {
-                        const mp3Blob = new Blob([mp3Data], { type: "audio/mpeg" });
                         try {
                             const virtualMp3 = VirtualFile.fromBytes(mp3Data, mp3FileName);
                             await targetMusicDir.writeFile(virtualMp3);
@@ -485,7 +484,6 @@ export class GameResImporter {
             console.error("Bink video conversion failed, skipping menu video.", e);
             return;
         }
-        const webmBlob = new Blob([webmBuffer], { type: "video/webm" });
         const virtualWebmFile = VirtualFile.fromBytes(webmBuffer, webmFileName);
         await targetRfsRootDir.writeFile(virtualWebmFile);
     }
@@ -542,7 +540,7 @@ export class GameResImporter {
         }
         if (splashFile) {
             console.log(`[GameResImporter] Writing "${splashImgFileName}" to RFS...`);
-            const virtualSplashFile = VirtualFile.fromBytes(new Uint8Array(await splashFile.arrayBuffer()), splashImgFileName);
+            const virtualSplashFile = VirtualFile.fromBytes(toOwnedUint8Array(new Uint8Array(await splashFile.arrayBuffer())), splashImgFileName);
             await targetRfsRootDir.writeFile(virtualSplashFile);
             console.log(`[GameResImporter] ✅ Successfully wrote "${splashImgFileName}" to RFS`);
         }

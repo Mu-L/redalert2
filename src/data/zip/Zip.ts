@@ -9,7 +9,7 @@ interface FileRecord {
     headerOffsetBig: bigint;
 }
 interface ByteArrayData {
-    data: number | bigint | Uint8Array;
+    data: number | bigint | string | Uint8Array;
     size?: number;
 }
 export class Zip {

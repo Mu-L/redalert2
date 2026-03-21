@@ -4,7 +4,7 @@ import { Coords } from '@/game/Coords';
 import * as THREE from 'three';
 import { Octree } from '@brakebein/threeoctree';
 const CAMERA_PADDING = 3;
-let cameraClone: THREE.OrthographicCamera | THREE.PerspectiveCamera;
+let cameraClone: THREE.Camera;
 export class OctreeContainer extends RenderableContainer {
     autoCull: boolean;
     private lastCameraPosition: THREE.Vector3;
@@ -53,20 +53,21 @@ export class OctreeContainer extends RenderableContainer {
     }
     computeProjectionMatrix(): THREE.Matrix4 {
         if (!cameraClone) {
-            cameraClone = this.camera.clone() as THREE.OrthographicCamera | THREE.PerspectiveCamera;
+            cameraClone = this.camera.clone();
         }
         else {
             cameraClone.copy(this.camera);
         }
-        if ('top' in cameraClone && 'bottom' in cameraClone && 'left' in cameraClone && 'right' in cameraClone) {
-            const orthoCamera = cameraClone as THREE.OrthographicCamera;
+        if (cameraClone instanceof THREE.OrthographicCamera) {
+            const orthoCamera = cameraClone;
             orthoCamera.top += CAMERA_PADDING * Coords.LEPTONS_PER_TILE * Coords.COS_ISO_CAMERA_BETA;
             orthoCamera.bottom -= CAMERA_PADDING * Coords.LEPTONS_PER_TILE * Coords.COS_ISO_CAMERA_BETA;
             orthoCamera.left -= CAMERA_PADDING * (2 * Coords.LEPTONS_PER_TILE) * Coords.COS_ISO_CAMERA_BETA;
             orthoCamera.right += CAMERA_PADDING * (2 * Coords.LEPTONS_PER_TILE) * Coords.COS_ISO_CAMERA_BETA;
         }
-        cameraClone.updateProjectionMatrix();
-        return cameraClone.projectionMatrix;
+        const projectionCamera = cameraClone as THREE.OrthographicCamera | THREE.PerspectiveCamera;
+        projectionCamera.updateProjectionMatrix();
+        return projectionCamera.projectionMatrix;
     }
     updateChild(child: any): void {
         const obj3D = child.get3DObject();

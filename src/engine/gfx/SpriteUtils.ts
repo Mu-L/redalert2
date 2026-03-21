@@ -30,6 +30,13 @@ interface SpriteGeometryOptions {
     depthOffset?: number;
     align: Align;
 }
+function getTextureImageSize(texture: THREE.Texture): ImageSize {
+    const sourceData = texture.source.data as ImageSize | undefined;
+    if (!sourceData || typeof sourceData.width !== 'number' || typeof sourceData.height !== 'number') {
+        throw new Error('Texture image size is unavailable');
+    }
+    return sourceData;
+}
 class SpriteUtilsClass {
     static readonly MAGIC_DEPTH_SCALE: number = 0.8;
     public readonly USE_INDEXED_GEOMETRY: boolean;
@@ -46,12 +53,13 @@ class SpriteUtilsClass {
         }
         const camera = options.camera;
         const texture = options.texture;
+        const imageSize = getTextureImageSize(texture);
         if (!options.textureArea) {
             options.textureArea = {
                 x: 0,
                 y: 0,
-                width: texture.image.width,
-                height: texture.image.height,
+                width: imageSize.width,
+                height: imageSize.height,
             };
         }
         if (!options.offset) {
@@ -59,10 +67,6 @@ class SpriteUtilsClass {
         }
         const textureWidth = options.textureArea.width;
         const textureHeight = options.textureArea.height;
-        const imageSize: ImageSize = {
-            width: options.texture.image.width,
-            height: options.texture.image.height,
-        };
         const cosY = Math.cos(camera.rotation.y) * (options.scale ?? 1);
         const flatScale = cosY / Math.sin(-camera.rotation.x);
         const spriteWidth = textureWidth * cosY;

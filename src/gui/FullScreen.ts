@@ -1,6 +1,10 @@
 import { CompositeDisposable } from '../util/disposable/CompositeDisposable';
 import { setupFullScreenChangeListener } from '../util/fullScreen';
 import { EventDispatcher } from '../util/event';
+type ScreenOrientationWithLock = ScreenOrientation & {
+    lock?: (orientation: OrientationLockType) => Promise<void>;
+    unlock?: () => void;
+};
 export interface HotKey {
     altKey: boolean;
     shiftKey: boolean;
@@ -63,9 +67,10 @@ export class FullScreen {
             (this.document as any).webkitFullscreenEnabled);
     }
     public async toggleAsync(): Promise<void> {
+        const orientation = screen?.orientation as ScreenOrientationWithLock | undefined;
         if (this.document.fullscreenElement) {
             try {
-                screen?.orientation?.unlock?.();
+                orientation?.unlock?.();
             }
             catch (_error) {
             }
@@ -74,7 +79,7 @@ export class FullScreen {
         else {
             await this.document.documentElement.requestFullscreen();
             try {
-                await screen?.orientation?.lock?.("landscape");
+                await orientation?.lock?.("landscape");
             }
             catch (error) {
                 console.warn("Orientation lock failed", error);

@@ -1,5 +1,6 @@
 import { DataStream } from '../DataStream';
 import { IOError } from './IOError';
+import { toOwnedUint8Array } from '../BufferUtils';
 export class VirtualFile {
     public stream: DataStream;
     public filename: string;
@@ -49,6 +50,6 @@ export class VirtualFile {
         return this.stream.byteLength;
     }
     asFile(mimeType?: string): File {
-        return new File([this.getBytes()], this.filename, { type: mimeType });
+        return new File([toOwnedUint8Array(this.getBytes())], this.filename, { type: mimeType });
     }
 }

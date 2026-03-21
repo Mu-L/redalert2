@@ -3,12 +3,13 @@ import { Animation } from '@/engine/Animation';
 import { AnimProps } from '@/engine/AnimProps';
 import { IniSection } from '@/data/IniSection';
 import { ShpFile } from '@/data/ShpFile';
+import { BoxedVar } from '@/util/BoxedVar';
 export class InvulnerableAnimRunner extends SimpleRunner {
     private minAmount: number;
     private maxAmount: number;
     private steps: number;
     declare animation: Animation;
-    constructor(gameSpeed: number, minAmount: number = -0.75, maxAmount: number = -0.5, steps: number = 10, rate: number = 10) {
+    constructor(gameSpeed: number | BoxedVar<number>, minAmount: number = -0.75, maxAmount: number = -0.5, steps: number = 10, rate: number = 10) {
         super();
         this.minAmount = minAmount;
         this.maxAmount = maxAmount;
@@ -17,7 +18,8 @@ export class InvulnerableAnimRunner extends SimpleRunner {
         props.rate = rate;
         props.loopEnd = steps;
         props.loopCount = -1;
-        this.animation = new Animation(props, gameSpeed);
+        const speed = typeof gameSpeed === 'number' ? new BoxedVar(gameSpeed) : gameSpeed;
+        this.animation = new Animation(props, speed);
         this.animation.stop();
     }
     animate(): void {

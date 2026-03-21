@@ -100,7 +100,7 @@ export class MapShroudLayer {
         const shroudFile = this.imageFinder.find(Engine.shroudFileName.split(".")[0], false);
         let textureAtlas = new ShpTextureAtlas().fromShpFile(shroudFile);
         this.disposables.add(textureAtlas);
-        let palette = new Palette();
+        let palette = new Palette({ colors: [] });
         let colors = [new Color(0, 0, 0), new Color(0, 0, 0)];
         for (let i = 0; i < 254; i++) {
             const alpha = Math.min(255, Math.floor((i / 125) * 255));

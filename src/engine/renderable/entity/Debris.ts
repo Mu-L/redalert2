@@ -6,6 +6,7 @@ import { AnimProps } from "@/engine/AnimProps";
 import { SimpleRunner } from "@/engine/animation/SimpleRunner";
 import { Coords } from "@/game/Coords";
 import { ShadowRenderable } from "@/engine/renderable/ShadowRenderable";
+import { BoxedVar } from "@/util/BoxedVar";
 import * as THREE from "three";
 interface GameObject {
     rules: any;
@@ -41,8 +42,7 @@ interface Lighting {
     compute(lightingType: any, tile: any, tileElevation: number): THREE.Vector3;
     computeNoAmbient(lightingType: any, tile: any, tileElevation: number): number;
 }
-interface GameSpeed {
-}
+type GameSpeed = BoxedVar<number>;
 interface VxlBuilderFactory {
     create(voxel: any, param2: any, palettes: Palette[], palette: Palette): VxlBuilder;
 }

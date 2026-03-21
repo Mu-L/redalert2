@@ -1,6 +1,5 @@
 import { WithPosition } from "@/engine/renderable/WithPosition";
-import * as ImageFinder from "@/engine/ImageFinder";
-import { MissingImageError } from "@/engine/ImageFinder";
+import { ImageFinder, MissingImageError } from "@/engine/ImageFinder";
 import { DebugUtils } from "@/engine/gfx/DebugUtils";
 import { ShpRenderable } from "@/engine/renderable/ShpRenderable";
 import { Coords } from "@/game/Coords";
@@ -23,16 +22,18 @@ import { BoxIntersectObject3D } from "@/engine/renderable/entity/BoxIntersectObj
 import { ExtraLightHelper } from "@/engine/renderable/entity/unit/ExtraLightHelper";
 import { DebugRenderable } from "@/engine/renderable/DebugRenderable";
 import { MathUtils } from "@/engine/gfx/MathUtils";
+import { BoxedVar } from "@/util/BoxedVar";
+import * as THREE from "three";
 export class Infantry {
     private gameObject: any;
     private rules: any;
     private art: any;
     private imageFinder: ImageFinder;
     private palette: any;
-    private camera: any;
+    private camera: THREE.Camera;
     private lighting: any;
     private debugFrame: any;
-    private gameSpeed: any;
+    private gameSpeed: number | BoxedVar<number>;
     private selectionModel: any;
     private useSpriteBatching: boolean;
     private useMeshInstancing: boolean;
@@ -48,14 +49,14 @@ export class Infantry {
     private label: string;
     private paletteRemaps: any[];
     private withPosition: WithPosition;
-    private baseExtraLight: THREE.Vector3;
-    private extraLight: THREE.Vector3;
-    private target: THREE.Object3D;
-    private posWrap: THREE.Object3D;
-    private shpRenderable: ShpRenderable;
-    private placeholder: DebugRenderable;
-    private blobShadow: BlobShadow;
-    private animRunner: SimpleRunner;
+    private baseExtraLight: THREE.Color;
+    private extraLight: THREE.Color;
+    private target!: THREE.Object3D;
+    private posWrap!: THREE.Object3D;
+    private shpRenderable!: ShpRenderable;
+    private placeholder!: DebugRenderable;
+    private blobShadow?: BlobShadow;
+    private animRunner!: SimpleRunner;
     private currentSequenceParams: any;
     private sequenceQueue: any[] = [];
     private renderableManager: any;
@@ -77,7 +78,7 @@ export class Infantry {
     private lastFiring: boolean;
     private lastPanicked: boolean;
     private lastStance: StanceType;
-    constructor(gameObject: any, rules: any, art: any, imageFinder: ImageFinder, theater: any, palette: any, camera: any, lighting: any, debugFrame: any, gameSpeed: any, selectionModel: any, useSpriteBatching: boolean, useMeshInstancing: boolean, pipOverlay: any, worldSound: any) {
+    constructor(gameObject: any, rules: any, art: any, imageFinder: ImageFinder, theater: any, palette: any, camera: THREE.Camera, lighting: any, debugFrame: any, gameSpeed: number | BoxedVar<number>, selectionModel: any, useSpriteBatching: boolean, useMeshInstancing: boolean, pipOverlay: any, worldSound: any) {
         this.gameObject = gameObject;
         this.rules = rules;
         this.art = art;
@@ -99,7 +100,7 @@ export class Infantry {
         this.palette = this.palette.remap(this.gameObject.owner.color);
         this.withPosition = new WithPosition();
         this.updateBaseLight();
-        this.extraLight = new THREE.Vector3().copy(this.baseExtraLight);
+        this.extraLight = this.baseExtraLight.clone();
     }
     updateBaseLight(): void {
         this.baseExtraLight = this.lighting
@@ -163,7 +164,7 @@ export class Infantry {
         this.plugins.forEach((plugin) => plugin.update(deltaTime));
         const { zone, stance, isCrashing, isMoving, isFiring, isPanicked, owner, veteranLevel, } = this.gameObject;
         this.pipOverlay?.update(deltaTime);
-        this.blobShadow?.update(deltaTime);
+        this.blobShadow?.update(deltaTime, undefined);
         if (veteranLevel !== this.lastVeteranLevel) {
             if (veteranLevel === VeteranLevel.Elite && this.lastVeteranLevel !== undefined) {
                 this.highlightAnimRunner.animate(30);
@@ -499,10 +500,14 @@ export class Infantry {
         }
         renderable.create3DObject();
         const object = renderable.get3DObject();
+        if (!object) {
+            throw new Error(`Infantry "${this.gameObject.name}" failed to create SHP renderable`);
+        }
         MathUtils.translateTowardsCamera(object, this.camera, 15 * Coords.ISO_WORLD_SCALE);
         object.updateMatrix();
         const animProps = new AnimProps(new IniSection("dummy"), image);
-        const animation = new Animation(animProps, this.gameSpeed);
+        const speed = typeof this.gameSpeed === 'number' ? new BoxedVar(this.gameSpeed) : this.gameSpeed;
+        const animation = new Animation(animProps, speed);
         this.animRunner = new SimpleRunner();
         this.animRunner.animation = animation;
         return object;

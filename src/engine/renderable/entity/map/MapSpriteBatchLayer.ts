@@ -9,7 +9,7 @@ import * as THREE from "three";
 interface BatchShpSpec {
     shpFile: any;
     frameNo: number;
-    depth: number;
+    depth: number | boolean;
     flat: boolean;
     position: THREE.Vector3;
     offset: THREE.Vector2;
@@ -28,7 +28,7 @@ export class MapSpriteBatchLayer {
     private camera: any;
     private lighting: any;
     private shpAggregator: ShpAggregator;
-    private textureCache: Map<string, any>;
+    private textureCache: Map<any, any>;
     private batchShpSpecsByObject: Map<any, ObjectSpecs>;
     private batchShpBuilders: Map<string, BatchShpBuilder[]>;
     private shadowBatchShpBuilders: BatchShpBuilder[];

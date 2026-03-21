@@ -12,10 +12,7 @@ export class MessageList {
     localPlayer: any;
     isComposing: boolean;
     messages: Message[];
-    private _onNewMessage: EventDispatcher<[
-        MessageList,
-        Message
-    ]>;
+    private _onNewMessage: EventDispatcher<MessageList, Message>;
     constructor(messageDurationSeconds: number, maxMessages: number, localPlayer: any) {
         this.messageDurationSeconds = messageDurationSeconds;
         this.maxMessages = maxMessages;

@@ -207,7 +207,7 @@ export class SoundHandler {
     }
     private handleObjectDestroySound(event: any): void {
         const target = event.target;
-        let sound: string | undefined;
+        let sound: string | SoundKey | undefined;
         if (target.isTechno()) {
             sound = target.rules.dieSound;
             if (!sound && target.isBuilding()) {

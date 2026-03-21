@@ -1,3 +1,4 @@
+import { toArrayBuffer } from './BufferUtils';
 type TypedArray = Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
 export class DataStream {
     public static LITTLE_ENDIAN: boolean = true;
@@ -62,7 +63,9 @@ export class DataStream {
     }
     set dataView(newDataView: DataView | TypedArray) {
         this._byteOffset = newDataView.byteOffset;
-        this._buffer = newDataView.buffer;
+        this._buffer = newDataView.buffer instanceof ArrayBuffer
+            ? newDataView.buffer
+            : toArrayBuffer(newDataView.buffer);
         this._dataView = new DataView(this._buffer, this._byteOffset);
         this._byteLength = this._byteOffset + newDataView.byteLength;
     }

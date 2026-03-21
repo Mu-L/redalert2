@@ -8,10 +8,14 @@ import { MapSpriteTranslation } from "@/engine/renderable/MapSpriteTranslation";
 import { SimpleRunner } from "@/engine/animation/SimpleRunner";
 import { MathUtils } from "@/engine/gfx/MathUtils";
 import { Coords } from "@/game/Coords";
+import { BoxedVar } from "@/util/BoxedVar";
+import { Palette } from "@/data/Palette";
 import * as THREE from 'three';
 interface ObjectArt {
     paletteType: string;
     customPaletteName?: string;
+    imageName: string;
+    useTheaterExtension: boolean;
     startSound?: string;
     report?: string;
     translucent: boolean;
@@ -27,8 +31,6 @@ interface ObjectArt {
 interface Theater {
     getPalette(paletteType: string, customPaletteName?: string): any;
 }
-interface Camera {
-}
 interface DebugFrame {
     value: boolean;
 }
@@ -39,10 +41,6 @@ interface SoundHandle {
     isLoop: boolean;
     stop(): void;
 }
-interface Palette {
-    clone(): Palette;
-    remap(colorMap: any): void;
-}
 export class Anim {
     public objectArt: ObjectArt;
     public extraOffset: {
@@ -51,9 +49,9 @@ export class Anim {
     };
     public imageFinder: ImageFinder;
     public theater: Theater;
-    public camera: Camera;
+    public camera: THREE.Camera;
     public debugFrame: DebugFrame;
-    public gameSpeed: number;
+    public gameSpeed: number | BoxedVar<number>;
     public useSpriteBatching: boolean;
     public extraLight: THREE.Vector3;
     public worldSound?: WorldSound;
@@ -70,7 +68,7 @@ export class Anim {
     constructor(name: string, objectArt: ObjectArt, extraOffset: {
         x: number;
         y: number;
-    }, imageFinder: ImageFinder, theater: Theater, camera: Camera, debugFrame: DebugFrame, gameSpeed: number, useSpriteBatching: boolean, extraLight: THREE.Vector3 = new THREE.Vector3(0, 0, 0), worldSound?: WorldSound, palette?: Palette) {
+    }, imageFinder: ImageFinder, theater: Theater, camera: THREE.Camera, debugFrame: DebugFrame, gameSpeed: number | BoxedVar<number>, useSpriteBatching: boolean, extraLight: THREE.Vector3 = new THREE.Vector3(0, 0, 0), worldSound?: WorldSound, palette?: Palette) {
         this.objectArt = objectArt;
         this.extraOffset = extraOffset;
         this.imageFinder = imageFinder;
@@ -167,10 +165,21 @@ export class Anim {
                 if (shouldBatch) {
                     throw new Error("Render order not supported with batching");
                 }
-                const shapeMesh = this.mainObj.getShapeMesh();
+                const shapeMesh = this.mainObj.getShapeMesh() as THREE.Mesh | undefined;
+                if (!shapeMesh) {
+                    throw new Error("Missing animation shape mesh");
+                }
                 shapeMesh.renderOrder = this.renderOrder;
-                shapeMesh.material.depthTest = !this.renderOrder;
-                shapeMesh.material.transparent = !!this.renderOrder;
+                if (Array.isArray(shapeMesh.material)) {
+                    shapeMesh.material.forEach((material) => {
+                        material.depthTest = !this.renderOrder;
+                        material.transparent = !!this.renderOrder;
+                    });
+                }
+                else {
+                    shapeMesh.material.depthTest = !this.renderOrder;
+                    shapeMesh.material.transparent = !!this.renderOrder;
+                }
             }
             const mainObj3D = this.mainObj.get3DObject();
             if (mainObj3D) {
@@ -226,7 +235,8 @@ export class Anim {
         const renderable = ShpRenderable.factory(shpFile, this.palette, this.camera, offset);
         renderable.setFlat(this.objectArt.flat);
         const animProps = new AnimProps(this.objectArt.art, shpFile);
-        this.animation = new Animation(animProps, this.gameSpeed);
+        const speed = typeof this.gameSpeed === 'number' ? new BoxedVar(this.gameSpeed) : this.gameSpeed;
+        this.animation = new Animation(animProps, speed);
         this.animationRunner = new SimpleRunner();
         this.animationRunner.animation = this.animation;
         return renderable;

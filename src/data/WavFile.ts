@@ -1,6 +1,7 @@
 import { WaveFile } from '@ra2web/wavefile';
 import type { VirtualFile } from './vfs/VirtualFile';
 import type { DataStream } from './DataStream';
+import { toArrayBuffer, toOwnedUint8Array } from './BufferUtils';
 export class WavFile {
     private rawData?: Uint8Array;
     private decodedData?: Uint8Array;
@@ -28,7 +29,7 @@ export class WavFile {
         }
         else if ((file as DataStream).buffer && (file as DataStream).byteOffset !== undefined && (file as DataStream).byteLength !== undefined) {
             const ds = file as DataStream;
-            this.rawData = new Uint8Array(ds.buffer, ds.byteOffset, ds.byteLength);
+            this.rawData = toOwnedUint8Array(new Uint8Array(ds.buffer, ds.byteOffset, ds.byteLength));
         }
         else {
             throw new Error('Cannot get Uint8Array from VirtualFile/DataStream for WavFile');
@@ -54,17 +55,17 @@ export class WavFile {
     }
     private decodeData(data: Uint8Array): Uint8Array {
         const wav = new WaveFile();
-        wav.fromBuffer(data);
+        wav.fromBuffer(toArrayBuffer(data.buffer, data.byteOffset, data.byteLength));
         if (wav.bitDepth === '4') {
             wav.fromIMAADPCM();
         }
-        return wav.toBuffer() as Uint8Array;
+        return toOwnedUint8Array(new Uint8Array(wav.toBuffer()));
     }
     isRawImaAdpcm(): boolean {
         if (!this.rawData)
             return false;
         const wav = new WaveFile();
-        wav.fromBuffer(this.rawData);
+        wav.fromBuffer(toArrayBuffer(this.rawData.buffer, this.rawData.byteOffset, this.rawData.byteLength));
         return wav.bitDepth === '4';
     }
 }

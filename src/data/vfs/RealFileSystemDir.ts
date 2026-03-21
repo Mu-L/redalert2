@@ -4,6 +4,7 @@ import { FileNotFoundError } from "./FileNotFoundError";
 import { IOError } from "./IOError";
 import { NameNotAllowedError } from "./NameNotAllowedError";
 import { VirtualFile } from "./VirtualFile";
+import { toOwnedUint8Array } from "../BufferUtils";
 export class RealFileSystemDir {
     private handle: FileSystemDirectoryHandle;
     public caseSensitive: boolean;
@@ -142,7 +143,7 @@ export class RealFileSystemDir {
             const fileHandle = await this.handle.getFileHandle(finalFilename, { create: true });
             const writable = await fileHandle.createWritable();
             try {
-                await writable.write(virtualFile.getBytes());
+                await writable.write(toOwnedUint8Array(virtualFile.getBytes()));
                 await writable.close();
             }
             catch (writeError) {

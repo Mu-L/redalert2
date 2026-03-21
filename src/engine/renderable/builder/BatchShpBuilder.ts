@@ -7,20 +7,20 @@ import { ShpFile } from '../../../data/ShpFile';
 interface BatchItem {
     position: THREE.Vector3;
     shpFile: ShpFile;
-    depth: boolean;
+    depth: number | boolean;
     flat: boolean;
     frameNo: number;
     offset: {
         x: number;
         y: number;
     };
-    lightMult?: THREE.Vector3;
+    lightMult?: THREE.Color;
 }
 export class BatchShpBuilder {
     private shpFile: ShpFile;
     private palette: any;
     private camera: THREE.Camera;
-    private textureCache: Map<ShpFile, ShpTextureAtlas>;
+    private textureCache: Map<any, ShpTextureAtlas>;
     private opacity: number;
     private transparent: boolean;
     private batchSize: number;
@@ -37,7 +37,7 @@ export class BatchShpBuilder {
     get trianglesPerSprite(): number {
         return SpriteUtils.TRIANGLES_PER_SPRITE;
     }
-    constructor(shpFile: ShpFile, palette: any, camera: THREE.Camera, textureCache: Map<ShpFile, ShpTextureAtlas>, opacity: number = 1, transparent: boolean = false, batchSize: number = 10000, scale: number = 1) {
+    constructor(shpFile: ShpFile, palette: any, camera: THREE.Camera, textureCache: Map<any, ShpTextureAtlas>, opacity: number = 1, transparent: boolean = false, batchSize: number = 10000, scale: number = 1) {
         this.shpFile = shpFile;
         this.palette = palette;
         this.camera = camera;
@@ -68,7 +68,7 @@ export class BatchShpBuilder {
             texture: this.atlas!.getTexture(),
             textureArea: this.atlas!.getTextureArea(item.frameNo),
             flat: item.flat,
-            depth: item.depth,
+            depth: !!item.depth,
             align: { x: 1, y: -1 },
             offset: offset,
             camera: this.camera,
@@ -192,7 +192,7 @@ export class BatchShpBuilder {
                 dstIndex.needsUpdate = true;
             }
         }
-        const lightMult = item.lightMult ?? new THREE.Vector3(1, 1, 1);
+        const lightMult = item.lightMult ?? new THREE.Color(1, 1, 1);
         this.setLightingAt(spriteIndex, lightMult, this.colorMultAttribute!.array as Float32Array);
         this.setVisibilityAt(spriteIndex, true, this.colorMultAttribute!.array as Float32Array);
         posAttr.needsUpdate = true;
@@ -229,11 +229,11 @@ export class BatchShpBuilder {
     isEmpty(): boolean {
         return this.specIndexes.size === 0;
     }
-    private setLightingAt(spriteIndex: number, lightMult: THREE.Vector3, array: Float32Array): void {
+    private setLightingAt(spriteIndex: number, lightMult: THREE.Color, array: Float32Array): void {
         for (let i = 0; i < this.verticesPerSprite; i++) {
-            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i] = lightMult.x;
-            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i + 1] = lightMult.y;
-            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i + 2] = lightMult.z;
+            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i] = lightMult.r;
+            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i + 1] = lightMult.g;
+            array[spriteIndex * this.verticesPerSprite * 4 + 4 * i + 2] = lightMult.b;
         }
     }
     private setVisibilityAt(spriteIndex: number, visible: boolean, array: Float32Array): void {
@@ -245,7 +245,7 @@ export class BatchShpBuilder {
         if (this.mesh) {
             let colorArray = this.colorMultAttribute!.array as Float32Array;
             this.specIndexes.forEach((spriteIndex, item) => {
-                const lightMult = item.lightMult ?? new THREE.Vector3(1, 1, 1);
+                const lightMult = item.lightMult ?? new THREE.Color(1, 1, 1);
                 this.setLightingAt(spriteIndex!, lightMult, colorArray);
             });
             this.colorMultAttribute!.needsUpdate = true;

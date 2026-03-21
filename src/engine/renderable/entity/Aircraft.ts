@@ -12,6 +12,8 @@ import { BoxIntersectObject3D } from "@/engine/renderable/entity/BoxIntersectObj
 import { RotorHelper } from "@/engine/renderable/entity/unit/RotorHelper";
 import { ExtraLightHelper } from "@/engine/renderable/entity/unit/ExtraLightHelper";
 import { DebugRenderable } from "@/engine/renderable/DebugRenderable";
+import { BoxedVar } from "@/util/BoxedVar";
+import { Palette } from "@/data/Palette";
 import * as THREE from 'three';
 interface GameObject {
     id: string;
@@ -54,10 +56,6 @@ interface Rules {
         };
     };
 }
-interface Palette {
-    clone(): Palette;
-    remap(color: any): Palette;
-}
 interface VoxelAnims {
     get(key: string): any;
 }
@@ -68,8 +66,7 @@ interface Lighting {
     computeNoAmbient(lightingType: any, tile: any): number;
     getAmbientIntensity(): number;
 }
-interface GameSpeed {
-}
+type GameSpeed = BoxedVar<number>;
 interface SelectionModel {
 }
 interface VxlBuilderFactory {
@@ -77,7 +74,7 @@ interface VxlBuilderFactory {
 }
 interface VxlBuilder {
     build(): THREE.Object3D;
-    setExtraLight(light: THREE.Vector3): void;
+    setExtraLight(light: THREE.Color): void;
     setOpacity(opacity: number): void;
     setPalette(palette: Palette): void;
     dispose(): void;
@@ -128,8 +125,8 @@ export class Aircraft {
     private paletteRemaps: Palette[] = [];
     private lastOwnerColor: any;
     private withPosition: WithPosition;
-    private baseExtraLight: THREE.Vector3;
-    private extraLight: THREE.Vector3;
+    private baseExtraLight: THREE.Color;
+    private extraLight: THREE.Color;
     private target?: THREE.Object3D;
     private lastVeteranLevel?: VeteranLevel;
     private lastInvulnerable: boolean = false;
@@ -167,10 +164,10 @@ export class Aircraft {
         this.lastOwnerColor = this.gameObject.owner.color;
         this.withPosition = new WithPosition();
         this.updateBaseLight();
-        this.extraLight = new THREE.Vector3().copy(this.baseExtraLight);
+        this.extraLight = this.baseExtraLight.clone();
     }
     private updateBaseLight(): void {
-        this.baseExtraLight = new THREE.Vector3().setScalar(1 + this.lighting.computeNoAmbient(this.objectArt.lightingType, this.gameObject.tile) + this.rules.audioVisual.extraAircraftLight);
+        this.baseExtraLight = new THREE.Color().setScalar(1 + this.lighting.computeNoAmbient(this.objectArt.lightingType, this.gameObject.tile) + this.rules.audioVisual.extraAircraftLight);
     }
     updateLighting(): void {
         this.plugins.forEach((plugin) => plugin.updateLighting?.());
