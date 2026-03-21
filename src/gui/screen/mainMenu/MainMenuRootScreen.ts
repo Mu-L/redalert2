@@ -10,6 +10,12 @@ import { LazyResourceCollection } from '../../../engine/LazyResourceCollection';
 import { MessageBoxApi } from '../../component/MessageBoxApi';
 import { Config } from '../../../Config';
 import { browserFileSystemAccess } from '../../../engine/gameRes/browserFileSystemAccess';
+import { ErrorHandler } from '../../../ErrorHandler';
+import { Rules } from '../../../game/rules/Rules';
+import { MapFileLoader } from '../game/MapFileLoader';
+import { Engine } from '../../../engine/Engine';
+import { ResourceLoader } from '../../../engine/ResourceLoader';
+import { RealFileSystemDir } from '../../../data/vfs/RealFileSystemDir';
 export interface UiScene {
     menuViewport: {
         x: number;
@@ -145,13 +151,8 @@ export class MainMenuRootScreen extends RootScreen {
         }
         else if (screenType === MainMenuScreenType.Skirmish) {
             console.log('[MainMenuRootScreen] Creating SkirmishScreen with real dependencies');
-            const { ErrorHandler } = await import('../../../ErrorHandler.js');
-            const { Rules } = await import('../../../game/rules/Rules.js');
-            const { MapFileLoader } = await import('../game/MapFileLoader.js');
-            const { Engine } = await import('../../../engine/Engine.js');
             const errorHandler = new ErrorHandler(this.messageBoxApi, this.strings);
             const rules = new Rules(Engine.getRules());
-            const { ResourceLoader } = await import('../../../engine/ResourceLoader.js');
             const mapResourceLoader = new ResourceLoader(this.config.mapsBaseUrl ?? '');
             const mapFileLoader = new MapFileLoader(mapResourceLoader, Engine.vfs);
             const mapList = Engine.getMapList();
@@ -160,11 +161,7 @@ export class MainMenuRootScreen extends RootScreen {
         }
         else if (screenType === MainMenuScreenType.MapSelection) {
             console.log('[MainMenuRootScreen] Creating MapSelScreen with real dependencies');
-            const { ErrorHandler } = await import('../../../ErrorHandler.js');
-            const { MapFileLoader } = await import('../game/MapFileLoader.js');
-            const { Engine } = await import('../../../engine/Engine.js');
             const errorHandler = new ErrorHandler(this.messageBoxApi, this.strings);
-            const { ResourceLoader } = await import('../../../engine/ResourceLoader.js');
             const mapResourceLoader = new ResourceLoader(this.config.mapsBaseUrl ?? '');
             const mapFileLoader = new MapFileLoader(mapResourceLoader, Engine.vfs);
             const mapList = Engine.getMapList();
@@ -173,7 +170,6 @@ export class MainMenuRootScreen extends RootScreen {
             try {
                 const mapDirHandle = await Engine.getMapDir();
                 if (mapDirHandle) {
-                    const { RealFileSystemDir } = await import('../../../data/vfs/RealFileSystemDir.js');
                     mapDir = new RealFileSystemDir(mapDirHandle);
                 }
             }

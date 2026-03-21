@@ -8,6 +8,7 @@ import { BadModArchiveError } from "@/gui/screen/mainMenu/modSel/BadModArchiveEr
 import { IniFile } from "data/IniFile";
 import { DuplicateModError } from "@/gui/screen/mainMenu/modSel/DuplicateModError";
 import { VirtualFile } from "data/vfs/VirtualFile";
+import { createSevenZipWasm } from "@/engine/gameRes/loadSevenZipWasm";
 interface MessageBoxApi {
     alert(message: string, buttonText: string): Promise<void>;
     confirm(message: string, confirmText: string, cancelText: string): Promise<boolean>;
@@ -47,9 +48,6 @@ interface SevenZipModule {
     FS: EmscriptenFS;
     callMain(args: string[]): void;
 }
-declare const SystemJS: {
-    import(module: string): Promise<any>;
-};
 export class ModImporter {
     private static readonly modFileExtensions = ["mix", "big", "csf", "ini", "art", "rules"];
     private strings: any;
@@ -66,13 +64,12 @@ export class ModImporter {
         let exitError: any;
         let sevenZipModule: SevenZipModule;
         try {
-            const sevenZipFactory = await SystemJS.import("7z-wasm");
-            sevenZipModule = await sevenZipFactory({
+            sevenZipModule = await createSevenZipWasm({
                 quit: (code: number, error: any) => {
                     exitCode = code;
                     exitError = error;
                 },
-            });
+            }) as SevenZipModule;
         }
         catch (error) {
             if (error instanceof WebAssembly.RuntimeError) {

@@ -19,18 +19,11 @@ import { NoWebAssemblyError } from './importError/NoWebAssemblyError';
 import { HttpRequest, DownloadError } from '../../network/HttpRequest';
 import { ArchiveDownloadError } from './importError/ArchiveDownloadError';
 import { toOwnedUint8Array } from '../../data/BufferUtils';
+import { createSevenZipWasm, type SevenZipWasmModule, type SevenZipWasmOptions } from './loadSevenZipWasm';
 import type { Config } from '../../Config';
 import type { Strings } from '../../data/Strings';
 import type { DataStream } from '../../data/DataStream';
 import type { FFmpeg } from '@ffmpeg/ffmpeg';
-interface SevenZipWasmModule {
-    FS: any;
-    callMain: (args: string[]) => void;
-}
-interface SevenZipWasmOptions {
-    quit?: (code: number, message?: string) => void;
-}
-declare function createSevenZipWasm(options?: SevenZipWasmOptions): Promise<SevenZipWasmModule>;
 const REQUIRED_MIX_SIZES = new Map<string, number>()
     .set("ra2.mix", 281895456)
     .set("language.mix", 53116040)
@@ -96,16 +89,7 @@ export class GameResImporter {
             let sevenZipErrorMessage: string | undefined;
             try {
                 console.log('[GameResImporter] Attempting to load 7z-wasm module');
-                const sevenZipWasmModule = await import("7z-wasm");
-                const sevenZipFactory = sevenZipWasmModule.default as any;
-                console.log('[GameResImporter] 7z-wasm module loaded, creating instance');
-                sevenZipModule = await sevenZipFactory({
-                    locateFile: (path: string, scriptDirectory: string) => {
-                        if (path === '7zz.wasm') {
-                            return '/7zz.wasm';
-                        }
-                        return path;
-                    },
+                sevenZipModule = await createSevenZipWasm({
                     quit: (code: number, exitStatus: any) => {
                         sevenZipExitCode = code;
                         sevenZipErrorMessage = exitStatus?.message || String(exitStatus);
