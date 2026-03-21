@@ -9,25 +9,7 @@ import { AutoLat } from '@/game/theater/AutoLat';
 import { TheaterType } from '@/engine/TheaterType';
 import { Vector2 } from '@/game/math/Vector2';
 import { Box2 } from '@/game/math/Box2';
-interface MapFile {
-    startingLocations: any[];
-    tiles: any[];
-    theaterType: TheaterType;
-    tags: Tag[];
-    cellTags: CellTag[];
-    lighting: any;
-    ionLighting: any;
-    triggers: any[];
-    variables: any[];
-    waypoints: Waypoint[];
-    terrains: any[];
-    overlays: any[];
-    smudges: any[];
-    structures: any[];
-    infantries: any[];
-    vehicles: any[];
-    aircrafts: any[];
-}
+import type { MapFile } from '@/data/MapFile';
 interface Tag {
     id: string;
 }
@@ -70,12 +52,12 @@ interface QuadTreeOptions {
 }
 export class GameMap {
     private mapFile: MapFile;
-    private tiles: TileCollection;
-    private mapBounds: MapBounds;
-    private tileOccupation: TileOccupation;
+    public tiles: TileCollection;
+    public mapBounds: MapBounds;
+    public tileOccupation: TileOccupation;
     private tileOcclusion: TileOcclusion;
-    private terrain: Terrain;
-    private bridges: Bridges;
+    public terrain: Terrain;
+    public bridges: Bridges;
     private technosByTile: QuadTree<Techno>;
     get startingLocations() {
         return this.mapFile.startingLocations;
@@ -83,14 +65,14 @@ export class GameMap {
     constructor(mapFile: MapFile, t: any, i: any, r: any) {
         this.mapFile = mapFile;
         this.tiles = new TileCollection(this.mapFile.tiles, t, i.general, r);
-        this.mapBounds = new MapBounds().fromMapFile(this.mapFile, this.tiles);
+        this.mapBounds = new MapBounds().fromMapFile(this.mapFile as any, this.tiles);
         this.tileOccupation = new TileOccupation(this.tiles);
         this.tileOcclusion = new TileOcclusion(this.tiles);
         this.terrain = new Terrain(this.tiles, this.mapFile.theaterType, this.mapBounds, this.tileOccupation, i);
         this.bridges = new Bridges(t, this.tiles, this.tileOccupation, this.mapBounds, i);
         const tags = this.mapFile.tags;
         for (const cellTag of this.mapFile.cellTags) {
-            const tile = this.tiles.getByMapCoords(cellTag.coords.x, cellTag.coords.y);
+            const tile = this.tiles.getByMapCoords(cellTag.coords.x, cellTag.coords.y) as (Tile & { tag?: Tag }) | undefined;
             if (tile) {
                 tile.tag = tags.find((tag) => tag.id === cellTag.tagId);
             }
@@ -138,7 +120,7 @@ export class GameMap {
     getCellTags(): CellTag[] {
         return this.mapFile.cellTags;
     }
-    getVariables(): any[] {
+    getVariables(): any {
         return this.mapFile.variables;
     }
     getWaypoint(waypointNumber: number): Waypoint | undefined {
@@ -180,7 +162,7 @@ export class GameMap {
         return resultTile;
     }
     isWithinHardBounds(tile: Tile): boolean {
-        return this.mapBounds.isWithinHardBounds(tile);
+        return this.mapBounds.isWithinHardBounds(tile as any);
     }
     getInitialMapObjects(): InitialMapObjects {
         return {

@@ -3,6 +3,7 @@ import { Coords } from '@/game/Coords';
 import * as THREE from 'three';
 import { MeshLine, MeshLineMaterial } from 'three.meshline';
 import { getMeshLineResolution } from '@/engine/renderable/fx/MeshLineResolution';
+const DEFAULT_LINE_TRAIL_DEC = 16;
 interface GameSpeed {
     value?: number;
 }
@@ -92,7 +93,7 @@ export class LineTrailFx {
         if (!targetPosition)
             return undefined;
         this.maxPoints = Math.max(2, Math.floor(((3 / this.getGameSpeedValue()) * 50) /
-            (decrement / ObjectArt.DEFAULT_LINE_TRAIL_DEC)));
+            (decrement / DEFAULT_LINE_TRAIL_DEC)));
         this.trailPoints = [targetPosition.clone(), targetPosition.clone()];
         this.lastTargetPosition = targetPosition.clone();
         this.cameraHash = this.computeCameraHash();

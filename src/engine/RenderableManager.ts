@@ -1,10 +1,10 @@
 import { OctreeContainer } from '@/engine/gfx/OctreeContainer';
 import { World } from '@/game/World';
 import { WorldScene } from '@/engine/renderable/WorldScene';
-import { Camera } from '@/engine/gfx/Camera';
 import { RenderableFactory } from '@/engine/renderable/entity/RenderableFactory';
 import { GameObject } from '@/game/gameobject/GameObject';
-import { Renderable } from '@/engine/renderable/Renderable';
+type Camera = any;
+type Renderable = any;
 export class RenderableManager {
     private world: World;
     private worldScene: WorldScene;
@@ -71,7 +71,7 @@ export class RenderableManager {
         this.world.onObjectRemoved.subscribe(this.onWorldObjectRemoved);
     }
     getRenderableById(id: string): Renderable {
-        return this.renderablesById.get(id);
+        return this.renderablesById.get(String(id));
     }
     getRenderableByGameObject(gameObject: GameObject): Renderable {
         return this.renderablesByGameObject.get(gameObject);
@@ -93,7 +93,7 @@ export class RenderableManager {
         container.remove(renderable);
         renderable.dispose?.();
         this.renderablesByGameObject.delete(gameObject);
-        this.renderablesById.delete(gameObject.id);
+        this.renderablesById.delete(String(gameObject.id));
     }
     createTransientAnim(anim: any, callback?: (renderable: Renderable) => void): Renderable {
         const renderable = this.renderableFactory.createTransientAnim(anim, this.container);
@@ -132,11 +132,11 @@ export class RenderableManager {
         this.renderablesById.forEach(renderable => renderable.dispose?.());
     }
     createRenderable(gameObject: GameObject, container: any): Renderable {
-        const renderable = this.renderableFactory.create(gameObject);
+        const renderable = this.renderableFactory.create(gameObject as any);
         renderable.setPosition(gameObject.position.worldPosition);
         container.add(renderable);
         this.renderablesByGameObject.set(gameObject, renderable);
-        this.renderablesById.set(gameObject.id, renderable);
+        this.renderablesById.set(String(gameObject.id), renderable);
         return renderable;
     }
     updateLighting(): void {

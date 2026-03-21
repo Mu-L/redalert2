@@ -14,7 +14,7 @@ import { FacingUtil } from "@/game/gameobject/unit/FacingUtil";
 import { Vector2 } from "@/game/math/Vector2";
 export const STRAFE_CLOSE_ENOUGH = 2;
 export class MoveInWeaponRangeTask extends MoveTask {
-    private target: any;
+    public target: any;
     private weapon: any;
     private recalcMinRange: boolean = true;
     private cancelRequested: boolean = false;
@@ -23,12 +23,12 @@ export class MoveInWeaponRangeTask extends MoveTask {
     private losHelper: LosHelper;
     private bomberManeuverTile?: any;
     private bomberQueuedTargetTile?: any;
-    constructor(game: any, target: any, unit: any, weapon: any) {
+    constructor(game: any, target: any, toBridge: boolean, weapon: any) {
         super(game, target instanceof GameObject
             ? target.isBuilding()
                 ? (target as any).centerTile
                 : target.tile
-            : target, unit, {
+            : target, toBridge, {
             pathFinderIgnoredBlockers: target instanceof GameObject && weapon.range > 0 ? [target] : undefined,
         });
         this.target = target;
@@ -133,7 +133,7 @@ export class MoveInWeaponRangeTask extends MoveTask {
             : this.rangeHelper.isInRange3(worldPos, this.target, minRange, range)) &&
             this.losHelper.hasLineOfSight(tile, this.target, this.weapon));
     }
-    findRelocationTile(fromTile: any, toTile: any, unit: any): any {
+    protected findRelocationTile(fromTile: any, toTile: any, unit: any): any {
         if (unit.rules.movementZone !== MovementZone.Fly) {
             return super.findRelocationTile(fromTile, toTile, unit);
         }

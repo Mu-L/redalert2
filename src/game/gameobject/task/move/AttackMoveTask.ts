@@ -2,7 +2,7 @@ import { MoveTask } from "@/game/gameobject/task/move/MoveTask";
 import { MoveState, CollisionState } from "@/game/gameobject/trait/MoveTrait";
 import { MovementZone } from "@/game/type/MovementZone";
 export class AttackMoveTask extends MoveTask {
-    private isAttackMove: boolean = true;
+    public isAttackMove: boolean = true;
     private attackPerformed: boolean = false;
     private passedFirstWaypoint: boolean = false;
     constructor(game: any, targetTile: any, toBridge: boolean, options?: any) {

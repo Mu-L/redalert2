@@ -55,7 +55,10 @@ interface UnitSelection {
     getSelectedUnits(): Unit[];
     isSelected(unit: Unit): boolean;
 }
-interface Camera {
+interface Camera extends THREE.Camera {
+    top?: number;
+    right?: number;
+    rotation: THREE.Euler;
 }
 interface LineVertex {
     type: VertexType;
@@ -152,7 +155,7 @@ export class WaypointLines {
                 if (unit.isUnit()) {
                     const linePath = this.createSourceLinePath(unit, this.paths.find(path => path.units.has(unit)));
                     this.sourceLinePaths.set(unit, linePath);
-                    linePath.lineObj = new WaypointLine(linePath, this.camera);
+                    linePath.lineObj = new WaypointLine(linePath, this.camera as any);
                     linePath.lineObj.create3DObject();
                     if (this.obj) {
                         this.obj.add(linePath.lineObj.get3DObject());
@@ -163,7 +166,7 @@ export class WaypointLines {
             for (const path of this.paths) {
                 const linePath = this.createWaypointLinePath(path, this.selectedPaths.includes(path));
                 this.waypointLinePaths.set(path, linePath);
-                linePath.lineObj = new WaypointLine(linePath, this.camera);
+                linePath.lineObj = new WaypointLine(linePath, this.camera as any);
                 linePath.lineObj.create3DObject();
                 if (this.obj) {
                     this.obj.add(linePath.lineObj.get3DObject());

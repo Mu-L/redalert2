@@ -129,8 +129,8 @@ export class BeaconFxHandler {
     };
     init(): void {
         this.disposables.add(this.game.events.subscribe(EventType.PingLocation, this.handlePingEvent));
-        this.renderer.onFrame.subscribe(this.handleFrame);
-        this.disposables.add(() => this.renderer.onFrame.unsubscribe(this.handleFrame));
+        const onFrameSubscription = this.renderer.onFrame.subscribe(this.handleFrame);
+        this.disposables.add(() => onFrameSubscription.unsubscribe(this.handleFrame));
     }
     canPingLocation(player: Player, tile: Tile): boolean {
         const beacons = this.beacons.get(player) ?? [];

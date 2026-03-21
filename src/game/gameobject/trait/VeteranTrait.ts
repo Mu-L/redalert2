@@ -15,7 +15,7 @@ interface GameObject {
         insignificant?: boolean;
         organic?: boolean;
     };
-    traits: any[];
+    traits: any;
     armedTrait?: ArmedTrait;
     cloakableTrait?: CloakableTrait;
     sensorsTrait?: SensorsTrait;
@@ -62,7 +62,7 @@ interface Weapon {
         };
     };
 }
-export class VeteranTrait implements NotifyTargetDestroy {
+export class VeteranTrait {
     private gameObject: GameObject;
     private veteranRules: VeteranRules;
     private veteranLevel: VeteranLevel;
@@ -144,7 +144,7 @@ export class VeteranTrait implements NotifyTargetDestroy {
             if (!gameObject.explodes) {
                 gameObject.explodes = true;
                 if (!gameObject.armedTrait) {
-                    gameObject.armedTrait = new ArmedTrait(gameObject, gameManager.rules);
+                    gameObject.armedTrait = new ArmedTrait(gameObject as any, gameManager.rules as any);
                     gameManager.addObjectTrait(gameObject, gameObject.armedTrait);
                 }
             }

@@ -14,8 +14,8 @@ interface LinePath {
     verticesNeedUpdate: boolean;
 }
 interface Camera extends THREE.Camera {
-    top: number;
-    right: number;
+    top?: number;
+    right?: number;
     rotation: THREE.Euler;
 }
 export class WaypointLine {
@@ -79,7 +79,7 @@ export class WaypointLine {
         this.lastUpdateMillis = this.lastUpdateMillis || timestamp;
         const deltaTime = (timestamp - this.lastUpdateMillis) / (1000 / 120);
         this.lastUpdateMillis = timestamp;
-        const cameraHash = this.camera.top + "_" + this.camera.right;
+        const cameraHash = (this.camera.top ?? 0) + "_" + (this.camera.right ?? 0);
         if (cameraHash !== this.cameraHash) {
             this.cameraHash = cameraHash;
             [this.fgLineMesh!, this.bgLineMesh!].forEach((mesh) => {

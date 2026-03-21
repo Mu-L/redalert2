@@ -66,7 +66,7 @@ interface SkirmishUnstackParams {
     changedMapFile?: any;
 }
 export class SkirmishScreen extends MainMenuScreen {
-    public musicType: MusicType;
+    declare public musicType: MusicType;
     private rootController: RootController;
     private errorHandler: ErrorHandler;
     private messageBoxApi: MessageBoxApi;

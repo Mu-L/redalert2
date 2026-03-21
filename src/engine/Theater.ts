@@ -1,11 +1,17 @@
 import { TileSets } from '../game/theater/TileSets';
 import { PaletteType } from './type/PaletteType';
-import type { TheaterType, TheaterSettings } from './TheaterType';
+import type { TheaterType } from './TheaterType';
 import type { Palette } from '../data/Palette';
 import type { LazyResourceCollection } from './LazyResourceCollection';
-import type { TmpFile } from '../data/TmpFile';
 import type { IniFile } from '../data/IniFile';
-import type { FileSystem } from '../data/vfs/FileSystem';
+interface TheaterSettings {
+    theaterIni: string;
+    extension: string;
+    isoPaletteName: string;
+    unitPaletteName: string;
+    overlayPaletteName: string;
+    libPaletteName: string;
+}
 export class Theater {
     public type: TheaterType;
     public settings: TheaterSettings;
@@ -38,7 +44,7 @@ export class Theater {
             throw new Error("Missing lib palette " + settings.libPaletteName);
         }
         const tileSetsInstance = new TileSets(theaterIni);
-        tileSetsInstance.loadTileData(tileDataCollection as FileSystem, settings.extension);
+        tileSetsInstance.loadTileData(tileDataCollection, settings.extension);
         return new Theater(type, settings, palettesCollection, isoPalette, overlayPalette, unitPalette, animPalette, libPalette, tileSetsInstance);
     }
     constructor(type: TheaterType, settings: TheaterSettings, palettes: LazyResourceCollection<Palette>, isoPalette: Palette, ovlPalette: Palette, unitPalette: Palette, animPalette: Palette, libPalette: Palette, tileSets: TileSets) {

@@ -48,9 +48,12 @@ export class MenuSlotAnimationRunner {
                     break;
                 case AnimationState.NOT_STARTED:
                     animation.start(time, this.delayFrames);
+                    animation.update(time);
+                    break;
                 case AnimationState.RUNNING:
                 default:
                     animation.update(time);
+                    break;
             }
             if (animation.getState() === AnimationState.STOPPED) {
                 this.collapsed = animationType === AnimationType.SlideOut;

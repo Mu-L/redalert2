@@ -9,6 +9,10 @@ import { NotifySpawn } from './interface/NotifySpawn';
 import { NotifyTick } from './interface/NotifyTick';
 import { NotifyUnspawn } from './interface/NotifyUnspawn';
 import { NotifyWarpChange } from './interface/NotifyWarpChange';
+type Building = any;
+type Player = any;
+type GameObject = any;
+type GameContext = any;
 export class GapGeneratorTrait {
     private radiusTiles: number;
     private refreshTicks: number;

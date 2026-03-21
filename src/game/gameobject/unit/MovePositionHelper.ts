@@ -15,7 +15,7 @@ interface Tile {
     rx: number;
     ry: number;
     z: number;
-    onBridgeLandType?: boolean;
+    onBridgeLandType?: any;
 }
 interface Bridge {
     isHighBridge(): boolean;
@@ -32,7 +32,7 @@ interface GameMap {
         getBridgeOnTile(tile: Tile): Bridge | undefined;
     };
     terrain: {
-        getPassableSpeed(tile: Tile, speedType: SpeedType, param3: boolean, param4: boolean): boolean;
+        getPassableSpeed(tile: Tile, speedType: SpeedType, param3: boolean, param4: boolean): any;
     };
 }
 interface Cluster {
@@ -43,7 +43,7 @@ export class MovePositionHelper {
     constructor(map: GameMap) {
         this.map = map;
     }
-    findPositions(objects: GameObject[], targetTile: Tile, sourceBridge: Bridge | undefined, isSpecialCondition: boolean): Map<GameObject, Tile> {
+    findPositions(objects: GameObject[], targetTile: any, sourceBridge: any, isSpecialCondition: boolean): Map<GameObject, Tile> {
         const tileAssignments = new Map<Tile, GameObject[]>();
         const clusters = this.clusterObjects(objects);
         if (!clusters.length) {
@@ -80,7 +80,7 @@ export class MovePositionHelper {
         clusters.forEach(cluster => {
             unplacedObjects.push(...cluster.objects);
         });
-        const tileFinder = new RadialTileFinder(this.map.tiles, this.map.mapBounds, targetTile, { width: 1, height: 1 }, 1, 5, () => true);
+        const tileFinder = new RadialTileFinder(this.map.tiles as any, this.map.mapBounds as any, targetTile, { width: 1, height: 1 }, 1, 5, () => true);
         let nextTile: Tile | undefined;
         while (unplacedObjects.length && (nextTile = tileFinder.getNextTile())) {
             const obj = unplacedObjects[0];
@@ -119,7 +119,7 @@ export class MovePositionHelper {
         }
         return !existingObjects.length;
     }
-    private isEligibleTile(tile: Tile, tileBridge: Bridge | undefined, sourceBridge: Bridge | undefined, targetTile: Tile): boolean {
+    public isEligibleTile(tile: any, tileBridge: any, sourceBridge: any, targetTile: any): boolean {
         if (sourceBridge?.isHighBridge() || tileBridge?.isHighBridge()) {
             return (tile.z + (tileBridge?.tileElevation ?? 0) ===
                 targetTile.z + (sourceBridge?.tileElevation ?? 0));

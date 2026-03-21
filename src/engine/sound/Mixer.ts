@@ -2,10 +2,7 @@ import { EventDispatcher } from "../../util/event";
 export class Mixer {
     private volumes: Map<number, number> = new Map();
     private mutes: Map<number, boolean> = new Map();
-    private _onVolumeChange = new EventDispatcher<[
-        Mixer,
-        number
-    ]>();
+    private _onVolumeChange = new EventDispatcher<Mixer, number>();
     get onVolumeChange() {
         return this._onVolumeChange.asEvent();
     }

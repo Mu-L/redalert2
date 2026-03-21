@@ -24,10 +24,7 @@ export class RaycastHelper {
         raycaster.setFromCamera(normalizedPointer, this.scene.camera);
         return raycaster.intersectObjects(targets, recursive);
     }
-    private normalizePointer(point: Point, viewport: Viewport): Point {
-        return {
-            x: ((point.x - viewport.x) / viewport.width) * 2 - 1,
-            y: 2 * -((point.y - viewport.y) / viewport.height) + 1,
-        };
+    private normalizePointer(point: Point, viewport: Viewport): THREE.Vector2 {
+        return new THREE.Vector2(((point.x - viewport.x) / viewport.width) * 2 - 1, 2 * -((point.y - viewport.y) / viewport.height) + 1);
     }
 }

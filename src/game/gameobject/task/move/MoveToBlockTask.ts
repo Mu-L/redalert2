@@ -4,8 +4,8 @@ import { MoveTask } from "@/game/gameobject/task/move/MoveTask";
 export class MoveToBlockTask extends Task {
     private game: any;
     private target: any;
-    private preventOpportunityFire: boolean = false;
-    private useChildTargetLines: boolean = true;
+    public preventOpportunityFire: boolean = false;
+    public useChildTargetLines: boolean = true;
     private attackPerformed: boolean = false;
     constructor(game: any, target: any) {
         super();

@@ -40,7 +40,7 @@ export class CombatantSidebarModel extends SidebarModel {
         return !!this.player.radarTrait && !this.player.radarTrait.isDisabled();
     }
     constructor(player: any, game: any) {
-        super(game);
+        super(game, undefined);
         this.player = player;
         this.rules = game.rules;
     }
@@ -149,7 +149,7 @@ export class CombatantSidebarModel extends SidebarModel {
     updateTabFlashing(tab: any) {
         tab.flashing = tab.items.some((item: any) => item.status === SidebarItemStatus.Ready);
     }
-    updateSidebarTechnoItem(item: SidebarTechnoItem, queue: any, production: any) {
+    updateSidebarTechnoItem(item: any, queue: any, production: any) {
         if (item.target.type === SidebarItemTargetType.Special) {
             throw new Error("Sidebar item must be of type Techno");
         }

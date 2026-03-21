@@ -17,7 +17,7 @@ export class Aircraft extends Techno {
     onBridge: boolean;
     zone: ZoneType;
     crateBonuses: CrateBonuses;
-    moveTrait: MoveTrait;
+    declare moveTrait: MoveTrait;
     airportBoundTrait?: AirportBoundTrait;
     crashableTrait?: CrashableTrait;
     missileSpawnTrait?: MissileSpawnTrait;

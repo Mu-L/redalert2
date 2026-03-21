@@ -360,10 +360,11 @@ export class Minimap extends UiObject {
                         console.warn("Current pan intersects no map tile");
                         return;
                     }
+                    const minimapCenterTile = centerTile as any;
                     const screenTileCoords = IsoCoords.screenToScreenTile(viewport.width / 2, viewport.height / 2);
                     const viewportRect = {
-                        x: centerTile.dx - screenTileCoords.x,
-                        y: centerTile.dy - screenTileCoords.y,
+                        x: minimapCenterTile.dx - screenTileCoords.x,
+                        y: minimapCenterTile.dy - screenTileCoords.y,
                         width: 2 * screenTileCoords.x,
                         height: 2 * screenTileCoords.y,
                     };

@@ -110,33 +110,32 @@ export class MissileLocomotor {
         }
         this.currentVelocity.setLength(speed);
         let done = false;
-        switch (this.flightPhase) {
-            case FlightPhase.Boost:
-                if (gameObject.position.worldPosition.y >= this.cruiseAltitude!) {
-                    this.flightPhase = FlightPhase.Midcourse;
+        if (this.flightPhase === FlightPhase.Boost) {
+            if (gameObject.position.worldPosition.y >= this.cruiseAltitude!) {
+                this.flightPhase = FlightPhase.Midcourse;
+            }
+            else {
+                done = false;
+            }
+        }
+        if (!done && this.flightPhase === FlightPhase.Midcourse) {
+            const horizontalDistance = new Vector2(targetDirection.x, targetDirection.z).length();
+            if (!this.missileRules.lazyCurve) {
+                geometry.rotateVec3Towards(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z), gameObject.rules.rot);
+                if (this.currentVelocity.y < 1) {
+                    const length = this.currentVelocity.length();
+                    this.currentVelocity.y = 0;
+                    this.currentVelocity.setLength(length);
                 }
-                else {
-                    done = false;
-                    break;
+                geometry.rotateVec3Towards(this.currentVelocity, new Vector3(targetDirection.x, this.currentVelocity.y, targetDirection.z), gameObject.rules.rot);
+                gameObject.direction = FacingUtil.fromMapCoords(Coords.vecWorldToGround(this.currentVelocity));
+                gameObject.pitch = Math.sign(this.currentVelocity.y) *
+                    geometry.angleDegBetweenVec3(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z));
+                if (horizontalDistance / (currentPosition.y - this.targetPosition!.y) < 1) {
+                    this.flightPhase = FlightPhase.Terminal;
                 }
-            case FlightPhase.Midcourse:
-                const horizontalDistance = new Vector2(targetDirection.x, targetDirection.z).length();
-                if (!this.missileRules.lazyCurve) {
-                    geometry.rotateVec3Towards(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z), gameObject.rules.rot);
-                    if (this.currentVelocity.y < 1) {
-                        const length = this.currentVelocity.length();
-                        this.currentVelocity.y = 0;
-                        this.currentVelocity.setLength(length);
-                    }
-                    geometry.rotateVec3Towards(this.currentVelocity, new Vector3(targetDirection.x, this.currentVelocity.y, targetDirection.z), gameObject.rules.rot);
-                    gameObject.direction = FacingUtil.fromMapCoords(Coords.vecWorldToGround(this.currentVelocity));
-                    gameObject.pitch = Math.sign(this.currentVelocity.y) *
-                        geometry.angleDegBetweenVec3(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z));
-                    if (horizontalDistance / (currentPosition.y - this.targetPosition!.y) < 1) {
-                        this.flightPhase = FlightPhase.Terminal;
-                    }
-                    break;
-                }
+            }
+            else {
                 this.flightPhase = FlightPhase.Terminal;
                 const controlPoint1 = currentPosition
                     .clone()
@@ -145,35 +144,39 @@ export class MissileLocomotor {
                     .setLength(horizontalDistance / 3 / GameMath.cos(geometry.degToRad(gameObject.pitch))));
                 const controlPoint2 = this.targetPosition!.clone().lerp(currentPosition, 0.15).setY(controlPoint1.y);
                 this.descentCurve = new CubicBezierCurve3(currentPosition, controlPoint1, controlPoint2, this.targetPosition!);
-            case FlightPhase.Terminal:
-                const bodyLength = this.missileRules.bodyLength;
-                if (this.missileRules.lazyCurve) {
-                    const curveLength = this.descentCurve!.getLength();
-                    this.descentTravelled = this.descentTravelled ?? 0;
-                    this.descentTravelled += Math.min(speed, curveLength - bodyLength - this.descentTravelled);
-                    const t = this.descentTravelled / curveLength;
-                    const pointOnCurve = this.descentCurve!.getPointAt(t);
-                    const tangent = this.descentCurve!.getTangentAt(t);
-                    this.currentVelocity.copy(pointOnCurve.sub(currentPosition));
-                    const horizontalTangent = tangent.clone().setY(0);
-                    gameObject.pitch = Math.sign(tangent.y - horizontalTangent.y) *
-                        geometry.angleDegBetweenVec3(horizontalTangent, tangent);
-                    done = (this.descentTravelled + bodyLength) / curveLength >= 1;
+            }
+        }
+        if (this.flightPhase === FlightPhase.Terminal) {
+            const bodyLength = this.missileRules.bodyLength;
+            if (this.missileRules.lazyCurve) {
+                const curveLength = this.descentCurve!.getLength();
+                this.descentTravelled = this.descentTravelled ?? 0;
+                this.descentTravelled += Math.min(speed, curveLength - bodyLength - this.descentTravelled);
+                const t = this.descentTravelled / curveLength;
+                const pointOnCurve = this.descentCurve!.getPointAt(t);
+                const tangent = this.descentCurve!.getTangentAt(t);
+                this.currentVelocity.copy(pointOnCurve.sub(currentPosition));
+                const horizontalTangent = tangent.clone().setY(0);
+                gameObject.pitch = Math.sign(tangent.y - horizontalTangent.y) *
+                    geometry.angleDegBetweenVec3(horizontalTangent, tangent);
+                done = (this.descentTravelled + bodyLength) / curveLength >= 1;
+            }
+            else {
+                geometry.rotateVec3Towards(this.currentVelocity, targetDirection, gameObject.rules.rot);
+                gameObject.direction = FacingUtil.fromMapCoords(Coords.vecWorldToGround(this.currentVelocity));
+                gameObject.pitch = Math.sign(this.currentVelocity.y) *
+                    geometry.angleDegBetweenVec3(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z));
+                const distanceToTarget = targetDirection.length() - bodyLength;
+                if (distanceToTarget < speed || distanceToTarget < 1) {
+                    this.currentVelocity.copy(targetDirection.clone().addScalar(-bodyLength));
+                    done = true;
                 }
-                else {
-                    geometry.rotateVec3Towards(this.currentVelocity, targetDirection, gameObject.rules.rot);
-                    gameObject.direction = FacingUtil.fromMapCoords(Coords.vecWorldToGround(this.currentVelocity));
-                    gameObject.pitch = Math.sign(this.currentVelocity.y) *
-                        geometry.angleDegBetweenVec3(this.currentVelocity, new Vector3(this.currentVelocity.x, 0, this.currentVelocity.z));
-                    const distanceToTarget = targetDirection.length() - bodyLength;
-                    if (distanceToTarget < speed || distanceToTarget < 1) {
-                        this.currentVelocity.copy(targetDirection.clone().addScalar(-bodyLength));
-                        done = true;
-                    }
-                }
-                break;
-            default:
-                throw new Error(`Unhandled flight phase "${this.flightPhase}"`);
+            }
+        }
+        if (this.flightPhase !== FlightPhase.Boost &&
+            this.flightPhase !== FlightPhase.Midcourse &&
+            this.flightPhase !== FlightPhase.Terminal) {
+            throw new Error(`Unhandled flight phase "${this.flightPhase}"`);
         }
         const newPosition = currentPosition.clone().add(this.currentVelocity);
         if (this.game.map.isWithinHardBounds(newPosition)) {

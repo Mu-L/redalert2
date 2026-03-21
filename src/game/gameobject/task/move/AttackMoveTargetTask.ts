@@ -1,7 +1,7 @@
 import { AttackTask } from "@/game/gameobject/task/AttackTask";
 import { MoveState } from "@/game/gameobject/trait/MoveTrait";
 export class AttackMoveTargetTask extends AttackTask {
-    private isAttackMove: boolean = true;
+    public isAttackMove: boolean = true;
     private attackPerformed: boolean = false;
     private passedFirstWaypoint: boolean = false;
     private internalTargetUpdateRequested: boolean = false;
@@ -38,7 +38,7 @@ export class AttackMoveTargetTask extends AttackTask {
         }
         super.requestTargetUpdate(target);
     }
-    onTargetChange(unit: any): void {
+    protected onTargetChange(unit: any): void {
         super.onTargetChange(unit);
         const currentTarget = unit.attackTrait.currentTarget;
         if (currentTarget &&

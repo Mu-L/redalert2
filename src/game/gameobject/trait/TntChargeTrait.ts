@@ -58,7 +58,7 @@ export class TntChargeTrait {
         const elevation = target.tileElevation;
         const zone = target.isUnit() ? target.zone : world.map.getTileZone(tile);
         const onBridge = !!target.isUnit() && target.onBridge;
-        warhead.detonate(world, damage, tile, elevation, target.isBuilding()
+        (warhead as any).detonate(world as any, damage, tile, elevation, target.isBuilding()
             ? Coords.tile3dToWorld(tile.rx + 0.5, tile.ry + 0.5, tile.z + elevation)
             : target.position.worldPosition, zone, onBridge ? CollisionType.OnBridge : CollisionType.None, world.createTarget(target, tile), { ...this.attackerInfo, weapon: undefined }, false, false, undefined);
     }

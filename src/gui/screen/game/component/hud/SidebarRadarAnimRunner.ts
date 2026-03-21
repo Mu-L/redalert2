@@ -45,9 +45,12 @@ export class SidebarRadarAnimationRunner {
                     break;
                 case AnimationState.NOT_STARTED:
                     anim.start(now);
+                    anim.update(now);
+                    break;
                 case AnimationState.RUNNING:
                 default:
                     anim.update(now);
+                    break;
             }
             if (anim.getState() === AnimationState.STOPPED) {
                 this.closed = type === AnimationType.RadarOff;

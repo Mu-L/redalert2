@@ -19,7 +19,7 @@ export class Infantry extends Techno {
     isPanicked: boolean;
     infDeathType: InfDeathType;
     crateBonuses: CrateBonuses;
-    moveTrait: MoveTrait;
+    declare moveTrait: MoveTrait;
     crashableTrait?: CrashableTrait;
     suppressionTrait?: SuppressionTrait;
     agentTrait?: AgentTrait;

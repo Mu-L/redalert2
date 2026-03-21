@@ -61,7 +61,7 @@ interface ImageFinder {
 }
 interface Palette {
 }
-interface Camera {
+interface Camera extends THREE.Camera {
 }
 interface Lighting {
     compute(lightingType: any, tile: any, offset: number): THREE.Vector3;
@@ -319,7 +319,11 @@ export class Overlay {
         wireframe.position.y += isBridge ? Coords.tileHeightToWorld(-1) : 0;
         return wireframe;
     }
-    private createMainObject(imageSource: any, drawOffset: THREE.Vector3): ShpRenderable {
+    private createMainObject(imageSource: any, drawOffset: {
+        x: number;
+        y: number;
+        z?: number;
+    }): ShpRenderable {
         const isWall = this.objectRules.wall;
         const heightOffset = this.gameObject.isHighBridge() ? 4 : 0;
         const renderable = ShpRenderable.factory(imageSource, this.palette, this.camera, drawOffset, this.objectArt.hasShadow && !this.gameObject.isLowBridge(), heightOffset, isWall);

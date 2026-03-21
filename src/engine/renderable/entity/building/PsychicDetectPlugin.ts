@@ -6,13 +6,19 @@ export class PsychicDetectPlugin {
     private localPlayer: {
         value: any;
     };
-    private camera: THREE.Camera;
+    private camera: THREE.Camera & {
+        top?: number;
+        right?: number;
+    };
     private lineEffects: Map<string, DetectionLineFx>;
     private renderableManager?: any;
     private lastDetectionLines?: any[];
     constructor(gameObject: any, psychicDetectorTrait: any, localPlayer: {
         value: any;
-    }, camera: THREE.Camera) {
+    }, camera: THREE.Camera & {
+        top?: number;
+        right?: number;
+    }) {
         this.gameObject = gameObject;
         this.psychicDetectorTrait = psychicDetectorTrait;
         this.localPlayer = localPlayer;

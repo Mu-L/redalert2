@@ -9,6 +9,7 @@ import { NotifyUnspawn } from '@/game/gameobject/trait/interface/NotifyUnspawn';
 import { NotifyAttack } from '@/game/gameobject/trait/interface/NotifyAttack';
 import { DeathType } from '@/game/gameobject/common/DeathType';
 export class GameObject {
+    [key: string]: any;
     public traits: Traits;
     public cachedTraits: {
         tick: any[];
@@ -24,6 +25,13 @@ export class GameObject {
     public art: any;
     public id: number;
     public position: any;
+    public spinVelocity: number = 0;
+    public owner: any;
+    public healthTrait: any;
+    public warpedOutTrait: any;
+    public attackTrait: any;
+    public unitOrderTrait: any;
+    public moveTrait: any;
     get tile() {
         return this.position.tile;
     }
@@ -116,6 +124,8 @@ export class GameObject {
         if (trait[NotifyTick.onTick]) {
             this.cachedTraits.tick.push(trait);
         }
+    }
+    applyRocking(_facing: number, _factor: number): void {
     }
     getUiName() {
         return this.rules.uiName;

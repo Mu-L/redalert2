@@ -85,7 +85,10 @@ export class RadBeamFx {
     dispose(): void {
         if (this.lineMesh) {
             this.lineMesh.geometry.dispose();
-            this.lineMesh.material.dispose();
+            const material = this.lineMesh.material;
+            Array.isArray(material)
+                ? material.forEach((entry) => entry.dispose())
+                : material.dispose();
         }
     }
 }

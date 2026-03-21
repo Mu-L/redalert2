@@ -41,7 +41,7 @@ interface ChatProps {
     localUsername?: string;
     userColors?: any;
     onSendMessage: (message: any) => void;
-    onCancelMessage: () => void;
+    onCancelMessage?: () => void;
 }
 const messageTypeMap = new Map<ChatRecipientType, string>()
     .set(ChatRecipientType.Channel, "type-channel")
@@ -66,7 +66,7 @@ export class Chat extends Component<ChatProps> {
         <div className="new-message-wrapper">
           <ChatInput ref={el => {
                     this.textBox = el;
-                }} chatHistory={chatHistory} channels={channels} className="new-message" tooltip={tooltips?.input} strings={strings} onSubmit={this.props.onSendMessage} onCancel={this.props.onCancelMessage}/>
+                }} chatHistory={chatHistory} channels={channels} className="new-message" tooltip={tooltips?.input} strings={strings} onSubmit={this.props.onSendMessage} onCancel={this.props.onCancelMessage ?? (() => { })}/>
           <button className="icon-button send-message-button" data-r-tooltip={tooltips?.button} onClick={() => this.textBox?.send()}/>
         </div>
       </div>);

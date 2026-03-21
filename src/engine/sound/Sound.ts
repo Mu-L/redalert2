@@ -84,16 +84,14 @@ export class Sound {
         this.document.removeEventListener("click", this.handleClick);
     }
     private getSoundKey(key: SoundKey | string): string | undefined {
-        let soundKey: string | undefined;
-        if (typeof SoundKey[key as keyof typeof SoundKey] === "string") {
-            soundKey = this.audioVisualRules.ini.getString(SoundKey[key as keyof typeof SoundKey]);
-            if (!soundKey)
+        if (typeof key === "number") {
+            const configKey = SoundKey[key];
+            if (!configKey) {
                 return;
+            }
+            return this.audioVisualRules.ini.getString(configKey);
         }
-        else {
-            soundKey = key as string;
-        }
-        return soundKey;
+        return key;
     }
     private getSoundSpec(key: SoundKey | string): SoundSpec | undefined {
         const soundKey = this.getSoundKey(key);
@@ -104,7 +102,7 @@ export class Sound {
             console.warn(`Sound "${soundKey}" is not defined`);
         }
         else {
-            console.warn(`No sound is defined for key "${SoundKey[key as keyof typeof SoundKey]}"`);
+            console.warn(`No sound is defined for key "${typeof key === "number" ? SoundKey[key] : key}"`);
         }
     }
     play(key: SoundKey | string, channel: ChannelType): PlaybackHandle | undefined {

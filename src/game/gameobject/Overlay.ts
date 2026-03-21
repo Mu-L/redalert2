@@ -6,6 +6,7 @@ import { OverlayTibType } from '@/engine/type/OverlayTibType';
 import { WallTrait } from '@/game/gameobject/trait/WallTrait';
 export class Overlay extends GameObject {
     radarInvisible: boolean;
+    overlayId!: number;
     wallTrait?: WallTrait;
     static factory(id: string, rules: any, owner: any): Overlay {
         const overlay = new this(id, rules, owner);

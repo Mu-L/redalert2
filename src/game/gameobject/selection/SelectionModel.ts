@@ -32,7 +32,7 @@ export class SelectionModel {
             : this.selectionLevel & ~SelectionLevel.Selected);
     }
     isHovered(): boolean {
-        return (this.selectionLevel >> SelectionLevel.Hover) & 1;
+        return Boolean((this.selectionLevel >> SelectionLevel.Hover) & 1);
     }
     isSelected(): boolean {
         return this.selectionLevel >= SelectionLevel.Selected;

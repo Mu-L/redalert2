@@ -20,9 +20,13 @@ export class Tooltip extends UiObject {
                 throw new Error('Tooltip root object was not created');
             }
             const texture = (this.texture = this.createTexture(this.text, this.color));
+            const image = texture.image as {
+                width: number;
+                height: number;
+            };
             const size = {
-                width: texture.image.width,
-                height: texture.image.height,
+                width: image.width,
+                height: image.height,
             };
             const mesh = (this.mesh = this.createMesh(texture, size.width, size.height));
             const position = this.computePosition(this.pointer, this.viewport, size);

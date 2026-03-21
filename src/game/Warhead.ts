@@ -35,6 +35,7 @@ interface GameObject {
     overlayId?: number;
     tileElevation: number;
     onBridge?: boolean;
+    deathType?: DeathType;
     isTechno(): boolean;
     isUnit(): boolean;
     isBuilding(): boolean;
@@ -44,9 +45,10 @@ interface GameObject {
     isOverlay(): boolean;
     isTerrain(): boolean;
     isBridge(): boolean;
-    onAttack(source: GameObject, weaponInfo?: WeaponInfo): void;
+    onAttack(source: any, weaponInfo?: WeaponInfo): void;
     applyRocking(direction: number, intensity: number): void;
     getBridge?(): GameObject;
+    [key: string]: any;
 }
 interface TechnoObject extends GameObject {
     warpedOutTrait: WarpedOutTrait;
@@ -133,9 +135,9 @@ interface GameWorld {
     generateRandomInt(min: number, max: number): number;
 }
 interface GameMap {
-    tiles: Tile[][];
-    mapBounds: Rectangle;
-    tileOccupation: TileOccupation;
+    tiles: any;
+    mapBounds: any;
+    tileOccupation: any;
     getObjectsOnTile(tile: Position): GameObject[];
 }
 interface Player {
@@ -145,11 +147,17 @@ interface Position {
     getMapPosition(): Vector3;
     clone(): Position;
     sub(other: Vector3): Position;
+    dx?: number;
+    dy?: number;
+    [key: string]: any;
 }
 interface Vector3 {
     x: number;
     y: number;
     z: number;
+    clone(): Vector3;
+    sub(other: any): Vector3;
+    [key: string]: any;
 }
 interface Rectangle {
     width: number;
@@ -221,13 +229,15 @@ interface AllianceManager {
     areAllied(player1: Player, player2: Player): boolean;
 }
 interface Tile {
+    [key: string]: any;
 }
 interface TileOccupation {
+    [key: string]: any;
 }
 export class Warhead {
     static readonly SPECIAL_WARHEAD_NAME = "Special";
     static readonly HE_WARHEAD_NAME = "HE";
-    constructor(private rules: WarheadRules) { }
+    constructor(public readonly rules: WarheadRules) { }
     canDamage(obj: GameObject, tile: Position, zone: ZoneType): boolean {
         if (!obj.isSpawned || obj.isDisposed || obj.isDestroyed || obj.isCrashing) {
             return false;
@@ -337,7 +347,7 @@ export class Warhead {
         gameWorld.traits.filter(NotifyAttack).forEach((trait: any) => {
             trait[NotifyAttack.onAttack](target, weaponInfo?.obj, gameWorld);
         });
-        target.onAttack(gameWorld, weaponInfo);
+        (target as any).onAttack(gameWorld as any, weaponInfo);
         gameWorld.events.dispatch(new ObjectAttackedEvent(target, weaponInfo, isDirectHit));
         if (target.isTechno() && !this.rules.temporal) {
             this.suppressOrScatterTarget(target as TechnoObject, gameWorld);
@@ -400,9 +410,9 @@ export class Warhead {
         const percentAtMax = this.rules.percentAtMax;
         const processedObjects = new Set<GameObject>();
         const objectDistances = new Map<GameObject, number[]>();
-        const rangeHelper = new RangeHelper(gameWorld.map.tileOccupation);
-        const tileFinder = new RadialTileFinder(gameWorld.map.tiles, gameWorld.map.mapBounds, centerTile, { width: 1, height: 1 }, 0, Math.ceil(cellSpread), () => true);
-        let currentTile: Position | null;
+        const rangeHelper = new RangeHelper(gameWorld.map.tileOccupation as any);
+        const tileFinder = new RadialTileFinder(gameWorld.map.tiles as any, gameWorld.map.mapBounds as any, centerTile as any, { width: 1, height: 1 }, 0, Math.ceil(cellSpread), () => true);
+        let currentTile: any;
         while ((currentTile = tileFinder.getNextTile())) {
             for (const obj of gameWorld.map.getObjectsOnTile(currentTile)) {
                 if (processedObjects.has(obj) && !obj.isBuilding())
@@ -507,7 +517,7 @@ export class Warhead {
                     if (obj.isVehicle() && this.rules.rocker) {
                         const rockIntensity = MathUtils.clamp(damage / 300, 0, 1);
                         if (rockIntensity > 0) {
-                            const rockDirection = FacingUtil.fromMapCoords(obj.position.getMapPosition().clone().sub(Coords.vecWorldToGround(centerCoords))) - obj.direction;
+                            const rockDirection = FacingUtil.fromMapCoords(obj.position.getMapPosition().clone().sub(Coords.vecWorldToGround(centerCoords as any)) as any) - obj.direction;
                             obj.applyRocking(rockDirection, rockIntensity);
                         }
                     }
@@ -517,7 +527,7 @@ export class Warhead {
                 hasInvulnerableHit = true;
             }
         }
-        const radLevel = weapon.rules.radLevel;
+        const radLevel = (weapon as any).rules?.radLevel ?? (weapon as any).radLevel ?? 0;
         if (radLevel && cellSpread) {
             gameWorld.mapRadiationTrait.createRadSite(centerTile, radLevel, cellSpread + 1);
         }

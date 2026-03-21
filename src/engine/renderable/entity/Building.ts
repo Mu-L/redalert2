@@ -235,21 +235,21 @@ export class Building {
         this.updateBaseLight();
         this.vxlExtraLight = new THREE.Vector3().copy(this.baseVxlExtraLight);
         this.shpExtraLight = new THREE.Vector3().copy(this.baseShpExtraLight);
-        var w = (this.animArtProps = new I.BuildingAnimArtProps());
+        const animArtProps = (this.animArtProps = new I.BuildingAnimArtProps());
         this.animArtProps.read(this.objectArt.art, this.art);
-        let C;
+        let mainShpFile;
         try {
-            C = this.imageFinder.findByObjectArt(this.objectArt);
+            mainShpFile = this.imageFinder.findByObjectArt(this.objectArt);
         }
         catch (e) {
             if (!(e instanceof MissingImageError))
                 throw e;
             console.warn(e.message);
         }
-        this.mainShpFile = C;
-        let E;
+        this.mainShpFile = mainShpFile;
+        let bibShpFile;
         try {
-            E = this.objectArt.bibShape
+            bibShpFile = this.objectArt.bibShape
                 ? this.imageFinder.find(this.objectArt.bibShape, this.objectArt.useTheaterExtension)
                 : void 0;
         }
@@ -258,14 +258,16 @@ export class Building {
                 throw e;
             console.warn(e.message);
         }
-        this.bibShpFile = E;
-        let x = new N.BuildingShpHelper(this.imageFinder);
-        w = this.animShpFiles = x.collectAnimShpFiles(w, this.objectArt);
-        let O = (this.shpFrameInfos = x.getShpFrameInfos(this.objectArt, C, E, w)), M = this.buildingImageDataCache.get(this.gameObject.name);
-        M ||
-            ((M = y.aggregate(O.values(), `agg_${this.objectRules.name}.shp`)),
-                this.buildingImageDataCache.set(this.gameObject.name, M)),
-            (this.aggregatedImageData = M),
+        this.bibShpFile = bibShpFile;
+        const buildingShpHelper = new N.BuildingShpHelper(this.imageFinder);
+        const animShpFiles = buildingShpHelper.collectAnimShpFiles(animArtProps, this.objectArt);
+        this.animShpFiles = animShpFiles;
+        const shpFrameInfos = (this.shpFrameInfos = buildingShpHelper.getShpFrameInfos(this.objectArt, mainShpFile, bibShpFile, animShpFiles));
+        let aggregatedImageData = this.buildingImageDataCache.get(this.gameObject.name);
+        aggregatedImageData ||
+            ((aggregatedImageData = y.aggregate(shpFrameInfos.values(), `agg_${this.objectRules.name}.shp`)),
+                this.buildingImageDataCache.set(this.gameObject.name, aggregatedImageData)),
+            (this.aggregatedImageData = aggregatedImageData),
             (this.withPosition = new R.WithPosition());
     }
     updateBaseLight() {
@@ -345,41 +347,43 @@ export class Building {
         }
     }
     createLamp(e) {
-        var t = this.objectRules;
-        let i = (1 + t.lightRedTint) * (1 + Math.abs(t.lightIntensity)) -
-            1, r = (1 + t.lightGreenTint) *
-            (1 + Math.abs(t.lightIntensity)) -
-            1, s = (1 + t.lightBlueTint) * (1 + Math.abs(t.lightIntensity)) -
-            1;
-        var a = Math.max(i, r, s);
-        1 < a && ((i /= a), (r /= a), (s /= a));
-        let n = new THREE.Color(i, r, s).multiplyScalar(0.9);
-        a = n.getHexString();
-        let o = Building.lampTextures.get(a);
-        if (!o) {
-            o = this.createLampTexture(a);
-            Building.lampTextures.set(a, o);
+        const objectRules = this.objectRules;
+        let redTint = (1 + objectRules.lightRedTint) * (1 + Math.abs(objectRules.lightIntensity)) - 1;
+        let greenTint = (1 + objectRules.lightGreenTint) * (1 + Math.abs(objectRules.lightIntensity)) - 1;
+        let blueTint = (1 + objectRules.lightBlueTint) * (1 + Math.abs(objectRules.lightIntensity)) - 1;
+        const maxTint = Math.max(redTint, greenTint, blueTint);
+        if (maxTint > 1) {
+            redTint /= maxTint;
+            greenTint /= maxTint;
+            blueTint /= maxTint;
         }
-        (a = new THREE.MeshBasicMaterial({
-            map: o,
+        const color = new THREE.Color(redTint, greenTint, blueTint).multiplyScalar(0.9);
+        const colorKey = color.getHexString();
+        let texture = Building.lampTextures.get(colorKey);
+        if (!texture) {
+            texture = this.createLampTexture(colorKey);
+            Building.lampTextures.set(colorKey, texture);
+        }
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
             depthTest: false,
             depthWrite: false,
             transparent: true,
             blending: THREE.CustomBlending,
-            blendEquation: 0 < t.lightIntensity
+            blendEquation: 0 < objectRules.lightIntensity
                 ? THREE.AddEquation
                 : THREE.ReverseSubtractEquation,
             blendSrc: THREE.DstColorFactor,
             blendDst: THREE.OneFactor,
-        })),
-            (t = t.lightVisibility),
-            (t = new THREE.PlaneGeometry(2 * t, 2 * t));
-        let l = new THREE.Mesh(t, a);
-        (l.rotation.x = -Math.PI / 2),
-            (l.renderOrder = 999995),
-            (l.matrixAutoUpdate = false),
-            l.updateMatrix(),
-            e.add(l);
+        });
+        const visibility = objectRules.lightVisibility;
+        const geometry = new THREE.PlaneGeometry(2 * visibility, 2 * visibility);
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.renderOrder = 999995;
+        mesh.matrixAutoUpdate = false;
+        mesh.updateMatrix();
+        e.add(mesh);
     }
     createLampTexture(e) {
         let t = document.createElement("canvas");
@@ -421,31 +425,35 @@ export class Building {
                 this.lastHasC4Charge !== t &&
                 t &&
                 ((this.lastHasC4Charge = t), this.highlight());
-            var r = this.highlightAnimRunner.shouldUpdate(), s = this.gameObject.invulnerableTrait.isActive(), t = s !== this.lastInvulnerable;
-            (this.lastInvulnerable = s) &&
-                t &&
+            const shouldUpdateHighlight = this.highlightAnimRunner.shouldUpdate();
+            const isInvulnerable = this.gameObject.invulnerableTrait.isActive();
+            const invulnerableChanged = isInvulnerable !== this.lastInvulnerable;
+            (this.lastInvulnerable = isInvulnerable) &&
+                invulnerableChanged &&
                 this.invulnAnimRunner.animate(),
                 this.invulnAnimRunner.shouldUpdate() &&
                     this.invulnAnimRunner.tick(i),
-                (r || t || s) &&
-                    (r && this.highlightAnimRunner.tick(i),
-                        (s = s ? this.invulnAnimRunner.getValue() : 0),
-                        (n =
-                            (r ? this.highlightAnimRunner.getValue() : 0) || s),
-                        (s = this.lighting.getAmbientIntensity()),
-                        x.ExtraLightHelper.multiplyVxl(this.vxlExtraLight, this.baseVxlExtraLight, s, n),
-                        x.ExtraLightHelper.multiplyShp(this.shpExtraLight, this.baseShpExtraLight, n));
-            var a, n = this.gameObject.warpedOutTrait.isActive();
-            if (n !== this.lastWarpedOut) {
-                let t = (this.lastWarpedOut = n) ? 0.5 : 1;
-                for (a of [
+                (shouldUpdateHighlight || invulnerableChanged || isInvulnerable) &&
+                    (shouldUpdateHighlight && this.highlightAnimRunner.tick(i),
+                        (() => {
+                            const invulnerableValue = isInvulnerable ? this.invulnAnimRunner.getValue() : 0;
+                            const highlightValue = (shouldUpdateHighlight ? this.highlightAnimRunner.getValue() : 0) || invulnerableValue;
+                            const ambientIntensity = this.lighting.getAmbientIntensity();
+                            x.ExtraLightHelper.multiplyVxl(this.vxlExtraLight, this.baseVxlExtraLight, ambientIntensity, highlightValue);
+                            x.ExtraLightHelper.multiplyShp(this.shpExtraLight, this.baseShpExtraLight, highlightValue);
+                        })());
+            let opacityTarget;
+            const warpedOut = this.gameObject.warpedOutTrait.isActive();
+            if (warpedOut !== this.lastWarpedOut) {
+                opacityTarget = (this.lastWarpedOut = warpedOut) ? 0.5 : 1;
+                for (const renderable of [
                     this.mainObj,
                     this.bib,
                     ...[...this.animObjects.values()].flat(),
                 ])
-                    a?.setOpacity(t);
-                this.turretBuilders?.forEach((e) => e.setOpacity(t)),
-                    this.placeholderObj?.setOpacity(t);
+                    renderable?.setOpacity(opacityTarget);
+                this.turretBuilders?.forEach((e) => e.setOpacity(opacityTarget)),
+                    this.placeholderObj?.setOpacity(opacityTarget);
             }
             this.gameObject.isDestroyed ||
                 ((o = this.gameObject.owner.color),
@@ -517,132 +525,176 @@ export class Building {
                     }
                 }
             }
-            c = this.gameObject.unitRepairTrait?.status;
-            this.lastRepairStatus === c ||
-                this.gameObject.isDestroyed ||
-                ((d = this.lastRepairStatus),
-                    (this.lastRepairStatus = c),
-                    this.hasAnimation(A.AnimationType.SPECIAL_REPAIR_START) &&
-                        (c === E.RepairStatus.Repairing
-                            ? ((this.currentAnimType !==
-                                A.AnimationType.SPECIAL_REPAIR_LOOP &&
-                                this.currentAnimType !==
-                                    A.AnimationType.SPECIAL_REPAIR_END) ||
-                                d !== E.RepairStatus.Idle
-                                ? this.setAnimation(A.AnimationType.SPECIAL_REPAIR_START, i)
-                                : (this.repairStartRequested = true),
-                                (this.repairStopRequested = false))
-                            : (this.currentAnimType ===
-                                A.AnimationType.SPECIAL_REPAIR_START
-                                ? (this.repairStopRequested = true)
-                                : this.endCurrentAnimation(),
-                                (this.repairStartRequested = false))));
-            let e = this.gameObject.superWeaponTrait?.getSuperWeapon(this.gameObject);
-            !e ||
-                !this.hasAnimation(A.AnimationType.SUPER_CHARGE_START) ||
-                this.gameObject.isDestroyed ||
-                ((g =
-                    e.getTimerSeconds() <=
-                        60 * this.objectRules.chargedAnimTime) !==
-                    this.lastSuperWeaponAlmostCharged &&
-                    ((this.lastSuperWeaponAlmostCharged = g)
-                        ? this.setAnimation(A.AnimationType.SUPER_CHARGE_START, i)
-                        : this.endCurrentAnimation())),
-                this.repairStopRequested &&
-                    this.currentAnimType ===
-                        A.AnimationType.SPECIAL_REPAIR_LOOP &&
-                    (this.endCurrentAnimation(),
-                        (this.repairStopRequested = false)),
-                this.repairStartRequested &&
-                    this.currentAnimType === A.AnimationType.IDLE &&
-                    (this.setAnimation(A.AnimationType.SPECIAL_REPAIR_START, i),
-                        (this.repairStartRequested = false)),
-                this.muzzleAnims && this.updateMuzzleAnims(i),
-                n ||
-                    (this.animations.forEach((e, t) => {
-                        switch (e.getState()) {
-                            case f.AnimationState.STOPPED:
-                                return;
-                            case f.AnimationState.DELAYED:
-                                e.update(i),
-                                    (t.get3DObject().visible =
-                                        e.getState() !== f.AnimationState.DELAYED);
-                                break;
-                            case f.AnimationState.NOT_STARTED:
-                                e.start(i);
-                            case f.AnimationState.RUNNING:
-                            default:
-                                e.update(i);
+            const repairStatus = this.gameObject.unitRepairTrait?.status;
+            if (this.lastRepairStatus !== repairStatus &&
+                !this.gameObject.isDestroyed) {
+                const previousRepairStatus = this.lastRepairStatus;
+                this.lastRepairStatus = repairStatus;
+                if (this.hasAnimation(A.AnimationType.SPECIAL_REPAIR_START)) {
+                    if (repairStatus === E.RepairStatus.Repairing) {
+                        if ((this.currentAnimType !== A.AnimationType.SPECIAL_REPAIR_LOOP &&
+                            this.currentAnimType !== A.AnimationType.SPECIAL_REPAIR_END) ||
+                            previousRepairStatus !== E.RepairStatus.Idle) {
+                            this.setAnimation(A.AnimationType.SPECIAL_REPAIR_START, i);
                         }
-                        t.setFrame(e.getCurrentFrame());
-                    }),
-                        this.animObjects.forEach((e, t) => {
-                            let a = this.animArtProps.getByType(t);
-                            e.forEach((t, e) => {
-                                var i = a[e];
-                                let r = this.animations.get(t);
-                                var s = i.translucent, i = i.translucency;
-                                if (s || 0 < i) {
-                                    let e;
-                                    (e = s
-                                        ? ((s = r.props),
-                                            1 - r.getCurrentFrame() / (s.end - s.start))
-                                        : 1 - i),
-                                        t.setOpacity(e);
-                                }
-                            });
-                        })),
-                this.toggleRangeCircleVisibility((this.gameObject.showWeaponRange ||
-                    (this.selectionModel.isSelected() &&
-                        -1 !== this.gameObject.rules.techLevel)) &&
-                    !n);
-            var h, u, c = this.gameObject.wallTrait?.wallType !==
-                this.lastWallType, d = void 0 === this.lastOccupiedState ||
+                        else {
+                            this.repairStartRequested = true;
+                        }
+                        this.repairStopRequested = false;
+                    }
+                    else {
+                        if (this.currentAnimType === A.AnimationType.SPECIAL_REPAIR_START) {
+                            this.repairStopRequested = true;
+                        }
+                        else {
+                            this.endCurrentAnimation();
+                        }
+                        this.repairStartRequested = false;
+                    }
+                }
+            }
+            const superWeapon = this.gameObject.superWeaponTrait?.getSuperWeapon(this.gameObject);
+            if (superWeapon &&
+                this.hasAnimation(A.AnimationType.SUPER_CHARGE_START) &&
+                !this.gameObject.isDestroyed) {
+                const superWeaponAlmostCharged = superWeapon.getTimerSeconds() <=
+                    60 * this.objectRules.chargedAnimTime;
+                if (superWeaponAlmostCharged !== this.lastSuperWeaponAlmostCharged) {
+                    this.lastSuperWeaponAlmostCharged = superWeaponAlmostCharged;
+                    if (superWeaponAlmostCharged) {
+                        this.setAnimation(A.AnimationType.SUPER_CHARGE_START, i);
+                    }
+                    else {
+                        this.endCurrentAnimation();
+                    }
+                }
+            }
+            if (this.repairStopRequested &&
+                this.currentAnimType === A.AnimationType.SPECIAL_REPAIR_LOOP) {
+                this.endCurrentAnimation();
+                this.repairStopRequested = false;
+            }
+            if (this.repairStartRequested &&
+                this.currentAnimType === A.AnimationType.IDLE) {
+                this.setAnimation(A.AnimationType.SPECIAL_REPAIR_START, i);
+                this.repairStartRequested = false;
+            }
+            this.muzzleAnims && this.updateMuzzleAnims(i);
+            const animationPaused = false;
+            if (!animationPaused) {
+                this.animations.forEach((animation, renderable) => {
+                    switch (animation.getState()) {
+                        case f.AnimationState.STOPPED:
+                            return;
+                        case f.AnimationState.DELAYED:
+                            animation.update(i);
+                            renderable.get3DObject().visible =
+                                animation.getState() !== f.AnimationState.DELAYED;
+                            break;
+                        case f.AnimationState.NOT_STARTED:
+                            animation.start(i);
+                            animation.update(i);
+                            break;
+                        case f.AnimationState.RUNNING:
+                        default:
+                            animation.update(i);
+                            break;
+                    }
+                    renderable.setFrame(animation.getCurrentFrame());
+                });
+                this.animObjects.forEach((renderables, animType) => {
+                    const animProps = this.animArtProps.getByType(animType);
+                    renderables.forEach((renderable, index) => {
+                        const animData = animProps[index];
+                        const animation = this.animations.get(renderable);
+                        const translucent = animData.translucent;
+                        const translucency = animData.translucency;
+                        if (translucent || 0 < translucency) {
+                            const opacity = translucent
+                                ? 1 -
+                                    animation.getCurrentFrame() /
+                                        (animation.props.end - animation.props.start)
+                                : 1 - translucency;
+                            renderable.setOpacity(opacity);
+                        }
+                    });
+                });
+            }
+            this.toggleRangeCircleVisibility((this.gameObject.showWeaponRange ||
+                (this.selectionModel.isSelected() &&
+                    -1 !== this.gameObject.rules.techLevel)) &&
+                !animationPaused);
+            const wallTypeChanged = this.gameObject.wallTrait?.wallType !==
+                this.lastWallType;
+            const occupiedChanged = void 0 === this.lastOccupiedState ||
                 this.lastOccupiedState !==
-                    !!this.gameObject.garrisonTrait?.isOccupied(), g = void 0 === this.lastHealth ||
+                    !!this.gameObject.garrisonTrait?.isOccupied();
+            const healthChanged = void 0 === this.lastHealth ||
                 this.lastHealth !== this.gameObject.healthTrait.health;
-            (c || d || g) &&
-                ((h = this.computeDamageType(this.gameObject.healthTrait.health)),
-                    (g = g && h !== this.computeDamageType(this.lastHealth)),
-                    (this.lastOccupiedState =
-                        !!this.gameObject.garrisonTrait?.isOccupied()),
-                    (this.lastHealth = this.gameObject.healthTrait.health),
-                    (this.lastWallType = this.gameObject.wallTrait?.wallType),
-                    (c || d || g) && this.updateImage(h),
-                    g &&
-                        h === p.DamageType.DESTROYED &&
-                        this.objectRules.explosion?.length &&
-                        this.createExplosionAnims(this.renderableManager)),
-                this.gameObject.turretTrait &&
-                    ((h = this.gameObject.turretTrait.facing) !==
-                        this.lastTurretFacing &&
-                        ((this.lastTurretFacing = h),
-                            (this.turretRot.rotation.y = THREE.MathUtils.degToRad(h)),
-                            this.turretRot.updateMatrix()),
-                        (h = this.gameObject.turretTrait.isRotating() && !n),
-                        this.lastTurretRotating !== h &&
-                            ((this.lastTurretRotating = h),
-                                (u = this.objectRules.turretRotateSound) &&
-                                    (h && !this.gameObject.isDestroyed
-                                        ? (this.turretRotateSound =
-                                            this.worldSound?.playEffect(u, this.gameObject, this.gameObject.owner))
-                                        : this.turretRotateSound?.stop()))),
-                this.gameObject.poweredTrait &&
-                    (this.gameObject.isDestroyed
-                        ? this.poweredSound &&
-                            (this.poweredSound.stop(),
-                                (this.poweredSound = void 0))
-                        : (u =
-                            this.gameObject.poweredTrait.isPoweredOn() &&
-                                !n) !== this.lastPowered &&
-                            (this.setPowered(u),
-                                (this.lastPowered = u),
-                                this.poweredSound?.stop(),
-                                (u = u
-                                    ? this.gameObject.rules.workingSound
-                                    : this.gameObject.rules.notWorkingSound) &&
-                                    !n &&
-                                    (this.poweredSound = this.worldSound?.playEffect(u, this.gameObject, this.gameObject.owner, 0.25))));
+            if (wallTypeChanged || occupiedChanged || healthChanged) {
+                const damageType = this.computeDamageType(this.gameObject.healthTrait.health);
+                const damageTypeChanged = healthChanged &&
+                    damageType !== this.computeDamageType(this.lastHealth);
+                this.lastOccupiedState =
+                    !!this.gameObject.garrisonTrait?.isOccupied();
+                this.lastHealth = this.gameObject.healthTrait.health;
+                this.lastWallType = this.gameObject.wallTrait?.wallType;
+                if (wallTypeChanged || occupiedChanged || damageTypeChanged) {
+                    this.updateImage(damageType);
+                }
+                if (damageTypeChanged &&
+                    damageType === p.DamageType.DESTROYED &&
+                    this.objectRules.explosion?.length) {
+                    this.createExplosionAnims(this.renderableManager);
+                }
+            }
+            if (this.gameObject.turretTrait) {
+                const turretFacing = this.gameObject.turretTrait.facing;
+                if (turretFacing !== this.lastTurretFacing) {
+                    this.lastTurretFacing = turretFacing;
+                    this.turretRot.rotation.y = THREE.MathUtils.degToRad(turretFacing);
+                    this.turretRot.updateMatrix();
+                }
+                const turretRotating = this.gameObject.turretTrait.isRotating() &&
+                    !animationPaused;
+                if (this.lastTurretRotating !== turretRotating) {
+                    this.lastTurretRotating = turretRotating;
+                    const turretRotateSound = this.objectRules.turretRotateSound;
+                    if (turretRotateSound) {
+                        if (turretRotating && !this.gameObject.isDestroyed) {
+                            this.turretRotateSound =
+                                this.worldSound?.playEffect(turretRotateSound, this.gameObject, this.gameObject.owner);
+                        }
+                        else {
+                            this.turretRotateSound?.stop();
+                        }
+                    }
+                }
+            }
+            if (this.gameObject.poweredTrait) {
+                if (this.gameObject.isDestroyed) {
+                    if (this.poweredSound) {
+                        this.poweredSound.stop();
+                        this.poweredSound = void 0;
+                    }
+                }
+                else {
+                    const isPowered = this.gameObject.poweredTrait.isPoweredOn() &&
+                        !animationPaused;
+                    if (isPowered !== this.lastPowered) {
+                        this.setPowered(isPowered);
+                        this.lastPowered = isPowered;
+                        this.poweredSound?.stop();
+                        const poweredSound = isPowered
+                            ? this.gameObject.rules.workingSound
+                            : this.gameObject.rules.notWorkingSound;
+                        if (poweredSound && !animationPaused) {
+                            this.poweredSound =
+                                this.worldSound?.playEffect(poweredSound, this.gameObject, this.gameObject.owner, 0.25);
+                        }
+                    }
+                }
+            }
         }
     }
     createExplosionAnims(e) {
@@ -759,98 +811,102 @@ export class Building {
                 this.mainObj.setFrame(e + t * i));
     }
     createObjects(t) {
-        var e = this.objectArt.foundation;
+        const foundation = this.objectArt.foundation;
         this.debugFrame.value &&
-            ((a = v.DebugUtils.createWireframe(e, this.objectArt.height)),
-                t.add(a));
-        let i = new b.MapSpriteTranslation(e.width, e.height);
-        var { spriteOffset: r, anchorPointWorld: s } = i.compute(), a = (this.spriteOffset = this.computeSpriteAnchorOffset(r));
-        let n = (this.spriteWrap = new THREE.Object3D());
-        n.matrixAutoUpdate = false;
-        let o = n, l = { ...a }, c = false;
-        r = this.objectArt.zShapePointMove;
+            t.add(v.DebugUtils.createWireframe(foundation, this.objectArt.height));
+        let spriteTranslation = new b.MapSpriteTranslation(foundation.width, foundation.height);
+        const { spriteOffset, anchorPointWorld } = spriteTranslation.compute();
+        const anchorOffset = (this.spriteOffset = this.computeSpriteAnchorOffset(spriteOffset));
+        let spriteWrap = (this.spriteWrap = new THREE.Object3D());
+        spriteWrap.matrixAutoUpdate = false;
+        let contentWrap = spriteWrap;
+        let adjustedOffset = { ...anchorOffset };
+        let hasZShapeFix = false;
+        const zShapePointMove = this.objectArt.zShapePointMove;
         if ((this.gameObject.rules.refinery ||
             this.gameObject.rules.nukeSilo) &&
-            r.length) {
-            (o = new THREE.Object3D()),
-                (o.matrixAutoUpdate = false),
-                n.add(o),
-                (c = true);
-            r = {
-                x: -r[0] / g.Coords.ISO_TILE_SIZE,
-                y: -r[1] / g.Coords.ISO_TILE_SIZE,
+            zShapePointMove.length) {
+            contentWrap = new THREE.Object3D();
+            contentWrap.matrixAutoUpdate = false;
+            spriteWrap.add(contentWrap);
+            hasZShapeFix = true;
+            const zShapeMove = {
+                x: -zShapePointMove[0] / g.Coords.ISO_TILE_SIZE,
+                y: -zShapePointMove[1] / g.Coords.ISO_TILE_SIZE,
             };
-            let e = new b.MapSpriteTranslation(r.x, r.y);
-            var { spriteOffset: h, anchorPointWorld: r } = e.compute();
-            (o.position.x = r.x),
-                (o.position.z = r.y),
-                o.updateMatrix(),
-                (l.x += h.x),
-                (l.y += h.y);
+            const zShapeTranslation = new b.MapSpriteTranslation(zShapeMove.x, zShapeMove.y);
+            const { spriteOffset: zShapeOffset, anchorPointWorld: zShapeAnchor } = zShapeTranslation.compute();
+            contentWrap.position.x = zShapeAnchor.x;
+            contentWrap.position.z = zShapeAnchor.y;
+            contentWrap.updateMatrix();
+            adjustedOffset.x += zShapeOffset.x;
+            adjustedOffset.y += zShapeOffset.y;
         }
         this.mainShpFile
-            ? ((this.mainObj = this.createMainObject(this.mainShpFile, l, c)),
+            ? ((this.mainObj = this.createMainObject(this.mainShpFile, adjustedOffset, hasZShapeFix)),
                 this.mainObj.create3DObject(),
-                o.add(this.mainObj.get3DObject()),
+                contentWrap.add(this.mainObj.get3DObject()),
                 this.mainObj.getFlat() &&
                     (M.MathUtils.translateTowardsCamera(this.mainObj.get3DObject(), this.camera, +g.Coords.ISO_WORLD_SCALE),
                         this.mainObj.get3DObject().updateMatrix()))
-            : ((this.placeholderObj = new O.DebugRenderable(e, this.objectArt.height, this.palette)),
+            : ((this.placeholderObj = new O.DebugRenderable(foundation, this.objectArt.height, this.palette)),
                 this.placeholderObj.setBatched(this.useSpriteBatching),
                 this.useSpriteBatching &&
                     this.placeholderObj.setBatchPalettes(this.paletteRemaps),
                 this.placeholderObj.create3DObject(),
                 t.add(this.placeholderObj.get3DObject())),
             this.objectRules.leaveRubble &&
-                ((this.rubbleObj = this.createRubbleObject(a)),
+                ((this.rubbleObj = this.createRubbleObject(anchorOffset)),
                     this.rubbleObj &&
                         (this.rubbleObj.setExtraLight(this.shpExtraLight),
                             this.rubbleObj.create3DObject(),
                             (this.rubbleObj.get3DObject().visible = false),
-                            n.add(this.rubbleObj.get3DObject())));
-        let u = this.createAnimObjects(l, c);
-        if ((u.forEach((e) => {
-            o.add(e);
+                            spriteWrap.add(this.rubbleObj.get3DObject())));
+        let animationObjects = this.createAnimObjects(adjustedOffset, hasZShapeFix);
+        if ((animationObjects.forEach((e) => {
+            contentWrap.add(e);
         }),
-            (this.fireObjects = this.createFireObjects(a)),
+            (this.fireObjects = this.createFireObjects(anchorOffset)),
             this.fireObjects.forEach((e) => {
-                n.add(e.get3DObject());
+                spriteWrap.add(e.get3DObject());
             }),
             this.objectRules.turret &&
-                (({ turret: h, turretRot: e } = this.createTurretObject(a, s)),
-                    (this.turret = h),
-                    (this.turretRot = e),
-                    n.add(this.turret)),
+                (() => {
+                    const { turret, turretRot } = this.createTurretObject(anchorOffset, anchorPointWorld);
+                    this.turret = turret;
+                    this.turretRot = turretRot;
+                    spriteWrap.add(this.turret);
+                })(),
             this.bibShpFile)) {
-            (this.bib = this.createBibObject(this.bibShpFile, a)),
+            (this.bib = this.createBibObject(this.bibShpFile, anchorOffset)),
                 this.bib.create3DObject();
-            let e = this.bib.get3DObject();
-            M.MathUtils.translateTowardsCamera(e, this.camera, -1),
-                e.updateMatrix(),
-                n.add(this.bib.get3DObject());
+            let bibObject = this.bib.get3DObject();
+            M.MathUtils.translateTowardsCamera(bibObject, this.camera, -1),
+                bibObject.updateMatrix(),
+                spriteWrap.add(this.bib.get3DObject());
         }
         if (this.gameObject.primaryWeapon ||
             this.gameObject.rules.hasRadialIndicator) {
-            a =
+            const range =
                 this.gameObject.psychicDetectorTrait?.radiusTiles ??
                     this.gameObject.gapGeneratorTrait?.radiusTiles ??
                     this.gameObject.primaryWeapon?.range;
-            if (a) {
-                a = this.rangeCircle = this.createRangeCircle(a);
-                let e = (this.rangeCircleWrapper = new THREE.Object3D());
-                (e.matrixAutoUpdate = false),
-                    (e.position.x = s.x / 2),
-                    (e.position.z = s.y / 2),
-                    e.updateMatrix(),
-                    (e.visible = false),
-                    e.add(a),
-                    t.add(e);
+            if (range) {
+                const rangeCircle = this.rangeCircle = this.createRangeCircle(range);
+                let rangeCircleWrapper = (this.rangeCircleWrapper = new THREE.Object3D());
+                (rangeCircleWrapper.matrixAutoUpdate = false),
+                    (rangeCircleWrapper.position.x = anchorPointWorld.x / 2),
+                    (rangeCircleWrapper.position.z = anchorPointWorld.y / 2),
+                    rangeCircleWrapper.updateMatrix(),
+                    (rangeCircleWrapper.visible = false),
+                    rangeCircleWrapper.add(rangeCircle),
+                    t.add(rangeCircleWrapper);
             }
         }
-        (n.position.x = s.x),
-            (n.position.z = s.y),
-            n.updateMatrix(),
-            t.add(n);
+        (spriteWrap.position.x = anchorPointWorld.x),
+            (spriteWrap.position.z = anchorPointWorld.y),
+            spriteWrap.updateMatrix(),
+            t.add(spriteWrap);
     }
     computeSpriteAnchorOffset(e) {
         var t = this.objectArt.getDrawOffset();
@@ -938,15 +994,17 @@ export class Building {
     }
     createMuzzleFlashAnim(e, i) {
         if (this.objectArt.muzzleFlash?.length) {
-            var r = u.getRandomInt(0, this.objectArt.muzzleFlash.length - 1), s = this.objectArt.muzzleFlash[r], r = this.gameObject.owner.country?.side === a.SideType.GDI
+            const muzzleIndex = u.getRandomInt(0, this.objectArt.muzzleFlash.length - 1);
+            const muzzleOffset = this.objectArt.muzzleFlash[muzzleIndex];
+            const weapon = this.gameObject.owner.country?.side === a.SideType.GDI
                 ? this.gameObject.primaryWeapon
                 : this.gameObject.secondaryWeapon;
-            if (r) {
-                r = r.rules.anim;
-                if (r.length) {
-                    r = r[u.getRandomInt(0, r.length - 1)];
-                    let t = { x: e.x + s.x, y: e.y + s.y };
-                    return i.createAnim(r, (e) => {
+            if (weapon) {
+                const muzzleAnimNames = weapon.rules.anim;
+                if (muzzleAnimNames.length) {
+                    const muzzleAnim = muzzleAnimNames[u.getRandomInt(0, muzzleAnimNames.length - 1)];
+                    let t = { x: e.x + muzzleOffset.x, y: e.y + muzzleOffset.y };
+                    return i.createAnim(muzzleAnim, (e) => {
                         e.extraOffset = t;
                     }, true);
                 }
@@ -954,14 +1012,16 @@ export class Building {
         }
     }
     createAnimObject(e, t, i, r, s) {
-        var a = e.art;
-        let n = new y.AnimProps(a, t);
+        const art = e.art;
+        let n = new y.AnimProps(art, t);
         (e.type !== A.AnimationType.BUILDUP &&
             e.type !== A.AnimationType.UNBUILD) ||
-            ((o = n.shadow ? t.numImages / 2 : t.numImages),
-                (n.rate = o / (60 * this.rules.general.buildupTime)));
-        var o = { x: i.x + e.offset.x, y: i.y + e.offset.y };
-        let l = T.ShpRenderable.factory(this.aggregatedImageData.file, this.palette, this.camera, o, n.shadow, 0, !e.flat, r, s && !e.flat);
+            (() => {
+                const frameCount = n.shadow ? t.numImages / 2 : t.numImages;
+                n.rate = frameCount / (60 * this.rules.general.buildupTime);
+            })();
+        const offset = { x: i.x + e.offset.x, y: i.y + e.offset.y };
+        let l = T.ShpRenderable.factory(this.aggregatedImageData.file, this.palette, this.camera, offset, n.shadow, 0, !e.flat, r, s && !e.flat);
         return (l.setSize(t),
             l.setFrameOffset(this.aggregatedImageData.imageIndexes.get(t)),
             l.setBatched(this.useSpriteBatching),
@@ -1140,8 +1200,26 @@ export class Building {
     setAnimation(e, t) {
         if (!this.gameObject.healthTrait.health)
             throw new Error("We can't switch building animation for a destroyed building");
-        switch ((this.hasAnimation(e) || (e = A.AnimationType.IDLE),
-            (this.currentAnimType = e),
+        this.hasAnimation(e) || (e = A.AnimationType.IDLE);
+        const startIdleAnimation = () => {
+            this.currentAnimType = A.AnimationType.IDLE;
+            if (this.objectRules.superWeapon &&
+                this.hasAnimation(A.AnimationType.SUPER)) {
+                this.setAnimationVisibility(A.AnimationType.SUPER, true, 0);
+                const superAnim = this.animObjects.get(A.AnimationType.SUPER)[0];
+                this.animations.get(superAnim).start(t);
+            }
+            else {
+                this.setAnimationVisibility(A.AnimationType.IDLE, true);
+                this.animObjects
+                    .get(A.AnimationType.IDLE)
+                    .forEach((e) => {
+                    this.animations.get(e).start(t);
+                });
+            }
+        };
+        let handled = false;
+        switch ((this.currentAnimType = e,
             this.setAnimationVisibility(A.AnimationType.IDLE, false),
             this.setAnimationVisibility(A.AnimationType.SPECIAL, false),
             this.setAnimationVisibility(A.AnimationType.PRODUCTION, false),
@@ -1173,6 +1251,7 @@ export class Building {
                         .forEach((e) => {
                         this.animations.get(e).start(t);
                     });
+                handled = true;
                 break;
             case A.AnimationType.BUILDUP:
                 this.setAnimationVisibility(A.AnimationType.ACTIVE, false),
@@ -1182,6 +1261,7 @@ export class Building {
                         .forEach((e) => {
                         this.animations.get(e).start(t);
                     });
+                handled = true;
                 break;
             case A.AnimationType.UNBUILD:
                 this.setAnimationVisibility(A.AnimationType.ACTIVE, false),
@@ -1191,6 +1271,7 @@ export class Building {
                         .forEach((e) => {
                         this.animations.get(e).start(t);
                     });
+                handled = true;
                 break;
             case A.AnimationType.FACTORY_DEPLOYING:
                 if (this.hasAnimation(A.AnimationType.FACTORY_DEPLOYING) &&
@@ -1201,8 +1282,9 @@ export class Building {
                             .forEach((e) => {
                             this.animations.get(e).start(t);
                         });
-                    break;
+                    handled = true;
                 }
+                break;
             case A.AnimationType.FACTORY_ROOF_DEPLOYING:
                 if (this.hasAnimation(A.AnimationType.FACTORY_ROOF_DEPLOYING) &&
                     this.objectRules.factory) {
@@ -1212,8 +1294,9 @@ export class Building {
                             .forEach((e) => {
                             this.animations.get(e).start(t);
                         });
-                    break;
+                    handled = true;
                 }
+                break;
             case A.AnimationType.SPECIAL_REPAIR_START:
             case A.AnimationType.SPECIAL_REPAIR_LOOP:
             case A.AnimationType.SPECIAL_REPAIR_END:
@@ -1230,8 +1313,9 @@ export class Building {
                         r = list[Math.min(r, list.length - 1)];
                     }
                     this.animations.get(r).start(t);
-                    break;
+                    handled = true;
                 }
+                break;
             case A.AnimationType.SPECIAL_SHOOT:
                 if (this.objectRules.isBaseDefense) {
                     this.setAnimationVisibility(A.AnimationType.ACTIVE, false);
@@ -1242,8 +1326,9 @@ export class Building {
                         s = list[Math.min(s, list.length - 1)];
                     }
                     this.animations.get(s).start(t);
-                    break;
+                    handled = true;
                 }
+                break;
             case A.AnimationType.SUPER_CHARGE_START:
             case A.AnimationType.SUPER_CHARGE_LOOP:
             case A.AnimationType.SUPER_CHARGE_END:
@@ -1256,23 +1341,15 @@ export class Building {
                         a = list[Math.min(a, list.length - 1)];
                     }
                     this.animations.get(a).start(t);
-                    break;
+                    handled = true;
                 }
+                break;
             case A.AnimationType.IDLE:
             default:
-                (this.currentAnimType = A.AnimationType.IDLE),
-                    this.objectRules.superWeapon &&
-                        this.hasAnimation(A.AnimationType.SUPER)
-                        ? (this.setAnimationVisibility(A.AnimationType.SUPER, true, 0),
-                            (a = this.animObjects.get(A.AnimationType.SUPER)[0]),
-                            this.animations.get(a).start(t))
-                        : (this.setAnimationVisibility(A.AnimationType.IDLE, true),
-                            this.animObjects
-                                .get(A.AnimationType.IDLE)
-                                .forEach((e) => {
-                                this.animations.get(e).start(t);
-                            }));
+                startIdleAnimation();
+                handled = true;
         }
+        handled || startIdleAnimation();
     }
     doWithAnimation(e, i) {
         var [t, r] = this.getNormalizedAnimType(e);

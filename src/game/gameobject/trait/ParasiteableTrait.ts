@@ -1,6 +1,6 @@
 import { DeathType } from '../common/DeathType';
 import { ZoneType } from '../unit/ZoneType';
-import { Vehicle } from '../Vehicle';
+import { ROCKING_TICKS } from '../Vehicle';
 import { NotifyAttack } from './interface/NotifyAttack';
 import { NotifyDestroy } from './interface/NotifyDestroy';
 import { NotifyHeal } from './interface/NotifyHeal';
@@ -11,7 +11,7 @@ import { WaitMinutesTask } from '../task/system/WaitMinutesTask';
 import { GameSpeed } from '../../GameSpeed';
 import { RadialTileFinder } from '../../map/tileFinder/RadialTileFinder';
 import { AttackTask } from '../task/AttackTask';
-const getRockingTicks = (): number => Vehicle.ROCKING_TICKS + 2;
+const getRockingTicks = (): number => ROCKING_TICKS + 2;
 export class ParasiteableTrait implements NotifyTick, NotifyHeal, NotifyDamage, NotifyAttack, NotifyDestroy, NotifyTeleport {
     private gameObject: any;
     private beingBoarded: boolean = false;

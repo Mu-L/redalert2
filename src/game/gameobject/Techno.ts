@@ -26,8 +26,8 @@ export class Techno extends GameObject {
     get veteranLevel() {
         return this.veteranTrait?.veteranLevel ?? VeteranLevel.None;
     }
-    constructor(id: string, rules: any, owner: any, general: any) {
-        super(id, rules, owner, general);
+    constructor(type: any, name: string, rules: any, art: any, _extra?: any) {
+        super(type, name, rules, art);
         this.explodes = this.rules.explodes;
         this.radarInvisible = this.rules.radarInvisible;
         this.c4 = this.rules.c4;

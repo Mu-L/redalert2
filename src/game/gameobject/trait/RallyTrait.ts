@@ -31,7 +31,7 @@ export class RallyTrait {
                     const tile = map.tiles.getByMapCoords(gameObject.tile.rx + x, gameObject.tile.ry + y);
                     if (!tile)
                         break;
-                    if (map.terrain.getPassableSpeed(tile, SpeedType.Float, false, false) > 0) {
+                    if ((map.terrain as any).getPassableSpeed(tile, SpeedType.Float, false, false) > 0) {
                         validTile = tile;
                         break;
                     }
@@ -59,10 +59,10 @@ export class RallyTrait {
             const tileBridge = !bridge || bridge.isHighBridge()
                 ? map.tileOccupation.getBridgeOnTile(tile)
                 : undefined;
-            return (!(isFlying ? [] : map.terrain.findObstacles({ tile, onBridge: tileBridge }, unit)).length &&
+            return (!(isFlying ? [] : map.terrain.findObstacles({ tile, onBridge: tileBridge }, unit as any)).length &&
                 (targetElevation === undefined || Math.abs(targetElevation - (tile.z + (tileBridge?.tileElevation ?? 0))) < 4) &&
-                (!checkBuildings || !map.getObjectsOnTile(tile).find(obj => obj.isBuilding() && !obj.isDestroyed)) &&
-                (isFlying || map.terrain.getPassableSpeed(tile, unit.rules.speedType, unit.isInfantry(), !!tileBridge) > 0));
+                (!checkBuildings || !map.getObjectsOnTile(tile).find(obj => (obj as any).isBuilding() && !(obj as any).isDestroyed)) &&
+                (isFlying || (map.terrain as any).getPassableSpeed(tile, unit.rules.speedType, unit.isInfantry(), !!tileBridge) > 0));
         });
         return finder.getNextTile() ?? targetTile;
     }

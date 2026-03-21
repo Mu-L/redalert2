@@ -22,23 +22,21 @@ export class EvaSpecs {
         if (!dialogListSection) {
             throw new Error("Missing eva.ini [DialogList] section");
         }
-        const dialogNames = new Set(dialogListSection.entries.values());
+        const dialogNames = new Set<string>([...dialogListSection.entries.values()].filter((value: unknown): value is string => typeof value === "string" && value.length > 0));
         const sidePrefix = this.sideType === SideType.GDI ? "Allied" : "Russian";
         for (let dialogName of dialogNames) {
-            if (dialogName) {
-                let dialogSection = ini.getSection(dialogName);
-                if (dialogSection) {
-                    const spec: EvaSpec = {
-                        text: dialogSection.getString("Text"),
-                        sound: dialogSection.getString(sidePrefix),
-                        priority: dialogSection.getEnum("Priority", EvaPriority, EvaPriority.Normal, true),
-                        queue: dialogSection.getString("Type").trim().toLowerCase() === "queue",
-                    };
-                    this.specs.set(dialogName, spec);
-                }
-                else {
-                    console.warn(`Missing eva section [${dialogName}]`);
-                }
+            let dialogSection = ini.getSection(dialogName);
+            if (dialogSection) {
+                const spec: EvaSpec = {
+                    text: dialogSection.getString("Text"),
+                    sound: dialogSection.getString(sidePrefix),
+                    priority: dialogSection.getEnum("Priority", EvaPriority, EvaPriority.Normal, true),
+                    queue: dialogSection.getString("Type").trim().toLowerCase() === "queue",
+                };
+                this.specs.set(dialogName, spec);
+            }
+            else {
+                console.warn(`Missing eva section [${dialogName}]`);
             }
         }
         return this;

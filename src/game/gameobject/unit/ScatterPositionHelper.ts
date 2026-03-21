@@ -1,20 +1,6 @@
 import { MovePositionHelper } from '@/game/gameobject/unit/MovePositionHelper';
 import { RandomTileFinder } from '@/game/map/tileFinder/RandomTileFinder';
-interface Game {
-    map: {
-        tiles: any;
-        mapBounds: any;
-        tileOccupation: {
-            getBridgeOnTile(tile: any): any;
-        };
-        terrain: {
-            findObstacles(params: {
-                tile: any;
-                onBridge: any;
-            }, unit: any): any[];
-        };
-    };
-}
+type Game = any;
 interface Unit {
     tile: any;
     onBridge?: boolean;
@@ -50,7 +36,7 @@ export class ScatterPositionHelper {
     findFreeMovePosition(unit: Unit, occupiedTiles: Set<any>, { ignoredBlockers, excludedTiles, noSlopes }: FindFreeMovePositionOptions = {}): MovePosition | undefined {
         const map = this.game.map;
         const unitBridge = unit.onBridge ? map.tileOccupation.getBridgeOnTile(unit.tile) : undefined;
-        const tileFinder = new RandomTileFinder(map.tiles, map.mapBounds, unit.tile, 1, this.game, (tile) => {
+        const tileFinder = new RandomTileFinder(map.tiles as any, map.mapBounds as any, unit.tile, 1, this.game as any, (tile) => {
             if (excludedTiles?.includes(tile))
                 return false;
             const bridge = map.tileOccupation.getBridgeOnTile(tile);

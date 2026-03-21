@@ -469,10 +469,7 @@ export class AttackTrait implements NotifyTick, NotifyDamage, NotifyTeleport {
         }
         return n;
     }
-    updateDistributedFireHistory(e: {
-        target: any;
-        weapon: any;
-    }): void {
+    updateDistributedFireHistory(e: any): void {
         if (this.distributedFireHistory.get(e.target) !== 50) {
             for (const [t, i] of this.distributedFireHistory) {
                 const newValue = i - 1;

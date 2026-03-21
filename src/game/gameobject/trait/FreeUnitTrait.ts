@@ -2,6 +2,8 @@ import { NotifyBuildStatus } from './interface/NotifyBuildStatus';
 import { Building, BuildStatus } from '@/game/gameobject/Building';
 import { ObjectType } from '@/engine/type/ObjectType';
 import { RadialBackFirstTileFinder } from '@/game/map/tileFinder/RadialBackFirstTileFinder';
+type Tile = any;
+type GameContext = any;
 export class FreeUnitTrait {
     [NotifyBuildStatus.onStatusChange](oldStatus: BuildStatus, building: Building, context: GameContext) {
         if (building.buildStatus === BuildStatus.Ready &&

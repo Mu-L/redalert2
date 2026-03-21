@@ -21,6 +21,9 @@ export class TriggerCondition {
     setTargets(targets: any[]): void {
         this.targets = targets;
     }
+    check(_context: any, _events: any[]): boolean | any[] {
+        return false;
+    }
     reset(): void { }
     getDebugName(): string {
         return `${this.event.triggerId}[${this.event.eventIndex}] (${this.trigger.name}).`;

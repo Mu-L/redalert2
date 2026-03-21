@@ -82,6 +82,8 @@ export class Game {
     public triggers = new TriggerManager();
     public localPlayer: any;
     public mapShroudTrait: any;
+    public mapRadiationTrait: any;
+    public mapLightingTrait: any;
     public crateGeneratorTrait: any;
     public status: GameStatus;
     public lastGameEndCheck: number | undefined;
@@ -332,7 +334,7 @@ export class Game {
         }
     }
     createInitialMapTechnos(technos: any[]) {
-        const playersByCountry = new Map(this.playerList
+        const playersByCountry = new Map<string, any>(this.playerList
             .getAll()
             .filter((player: any) => !!player.country)
             .map((player: any) => [player.country.name, player]));

@@ -19,7 +19,7 @@ export class ObserveGameAction extends Action {
         player.resigned = true;
         player.defeated = true;
         player.isObserver = true;
-        this.game.events.dispatch(new PlayerResignedEvent(player));
+        this.game.events.dispatch(new PlayerResignedEvent(player, undefined));
         this.game.events.dispatch(new PlayerDefeatedEvent(player));
         this.game.mapShroudTrait.getPlayerShroud(player)?.revealAll();
         const wasRadarDisabled = player.radarTrait.isDisabled();

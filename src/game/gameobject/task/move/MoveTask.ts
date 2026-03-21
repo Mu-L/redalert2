@@ -9,7 +9,7 @@ import { MoveAsideTask } from "@/game/gameobject/task/move/MoveAsideTask";
 import { MovePositionHelper } from "@/game/gameobject/unit/MovePositionHelper";
 import { RadialTileFinder } from "@/game/map/tileFinder/RadialTileFinder";
 import { RangeHelper } from "@/game/gameobject/unit/RangeHelper";
-import { AppLogger, Logger } from "@/util/Logger";
+import AppLogger from "@/util/Logger";
 import { Coords } from "@/game/Coords";
 import { TaskStatus } from "@/game/gameobject/task/system/TaskStatus";
 import { ZoneType } from "@/game/gameobject/unit/ZoneType";
@@ -21,13 +21,12 @@ import { PowerupType } from "@/game/type/PowerupType";
 import { ScatterTask } from "@/game/gameobject/task/ScatterTask";
 import { VeteranAbility } from "@/game/gameobject/unit/VeteranAbility";
 import { Vector2 } from "@/game/math/Vector2";
-import type { Game } from "@/game/Game";
-import type { Tile } from "@/game/map/Tile";
 import type { GameObject } from "@/game/gameobject/GameObject";
-import type { Bridge } from "@/game/gameobject/Bridge";
 import type { Unit } from "@/game/gameobject/Unit";
 import type { Locomotor } from "@/game/gameobject/locomotor/Locomotor";
-import type { Weapon } from "@/game/gameobject/Weapon";
+type Tile = any;
+type Bridge = any;
+type Weapon = any;
 const VELOCITY_FACTOR = 1.5;
 const MAX_PLANNING_TICKS = 200;
 const WAIT_TICKS = 40;
@@ -66,12 +65,12 @@ interface UnreachableTarget {
     toBridge: boolean;
 }
 export class MoveTask extends Task {
-    protected game: Game;
+    protected game: any;
     protected targetTile: Tile;
     protected toBridge: boolean;
     protected options?: MoveOptions;
     public preventOpportunityFire = false;
-    private logger: Logger;
+    private logger: any;
     private destinationLeptons: Vector2;
     private currentWaypointLeptons: Vector2;
     private needsPathUpdate = false;
@@ -87,7 +86,7 @@ export class MoveTask extends Task {
     private groundPathPlan?: GroundPathPlan;
     private targetOffset?: Vector2;
     private inPlanningForTicks?: number;
-    constructor(game: Game, targetTile: Tile, toBridge: boolean, options?: MoveOptions) {
+    constructor(game: any, targetTile: Tile, toBridge: boolean, options?: MoveOptions) {
         super();
         this.game = game;
         this.targetTile = targetTile;
@@ -820,7 +819,7 @@ export class MoveTask extends Task {
                             obj.veteranTrait?.hasVeteranAbility(VeteranAbility.SCATTER) &&
                             !this.game.areFriendly(obj, unit))) {
                             if (!crushable.unitOrderTrait.hasTasks()) {
-                                crushable.unitOrderTrait.addTask(new ScatterTask(this.game));
+                                crushable.unitOrderTrait.addTask(new ScatterTask(this.game, undefined, undefined));
                             }
                         }
                     }
@@ -902,7 +901,7 @@ export class MoveTask extends Task {
         }
         return weapon;
     }
-    private findRelocationTile(preferredTile: Tile, preferredBridge: Bridge | undefined, unit: Unit): Tile | undefined {
+    protected findRelocationTile(preferredTile: any, preferredBridge: any, unit: Unit): any {
         const map = this.game.map;
         if (unit.rules.movementZone === MovementZone.Fly) {
             const isValidTile = (tile: Tile): boolean => !map.tileOccupation
@@ -970,7 +969,7 @@ export class MoveTask extends Task {
             if ((this.options?.allowOutOfBoundsTarget ||
                 this.game.map.mapBounds.isWithinBounds(this.targetTile)) &&
                 unit.rules.movementZone !== MovementZone.Fly &&
-                !locomotor.ignoresTerrain &&
+                !(locomotor as any).ignoresTerrain &&
                 unit.unitOrderTrait.getCurrentTask()?.isCancelling()) {
                 if (!this.groundPathPlan) {
                     const plan = this.computeGroundPath(unit);

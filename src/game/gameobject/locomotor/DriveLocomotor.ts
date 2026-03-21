@@ -24,7 +24,7 @@ export class DriveLocomotor {
     private carryOverDistance: number = 0;
     private currentWaypointType: WaypointType = WaypointType.None;
     private initialPosition: Vector2;
-    private steerCurve: CurvePath;
+    private steerCurve: any;
     private lastPosition: Vector2;
     private totalDistanceToTravel: number;
     constructor(game: any) {
@@ -131,8 +131,8 @@ export class DriveLocomotor {
             const newDistance = Math.min(this.distanceTravelled + speed, curveLength);
             this.carryOverDistance = Math.max(0, this.distanceTravelled + speed - curveLength);
             this.distanceTravelled = newDistance;
-            const curvePoint = this.steerCurve.getPointAt(this.distanceTravelled / curveLength);
-            const curveTangent = this.steerCurve.getTangentAt(this.distanceTravelled / curveLength);
+            const curvePoint = this.steerCurve.getPointAt(this.distanceTravelled / curveLength) as Vector2;
+            const curveTangent = this.steerCurve.getTangentAt(this.distanceTravelled / curveLength) as Vector2;
             const velocityVector = curveTangent.clone().setLength(speed);
             unit.moveTrait.velocity.set(velocityVector.x, 0, velocityVector.y);
             const rotationSpeed = unit.rules.rot;

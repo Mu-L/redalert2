@@ -15,9 +15,9 @@ export class ToggleRepairAction extends Action {
         this.buildingId = new DataStream(data).readUint32();
     }
     serialize(): Uint8Array {
-        return new DataStream(4)
-            .writeUint32(this.buildingId)
-            .toUint8Array();
+        const stream = new DataStream(4);
+        stream.writeUint32(this.buildingId);
+        return stream.toUint8Array();
     }
     print(): string {
         return `Toggle repair ${this.buildingId}`;

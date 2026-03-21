@@ -27,7 +27,7 @@ interface LocalPrefs {
 interface GeneralOptsProps {
     strings: Strings;
     options: GeneralOptions;
-    fullScreen: FullScreen;
+    fullScreen: any;
     inGame: boolean;
     localPrefs?: LocalPrefs;
 }

@@ -24,7 +24,7 @@ export class EnterTransportTask extends Task {
     private game: any;
     public target: any;
     private movePerformed: boolean = false;
-    private preventOpportunityFire: boolean = false;
+    public preventOpportunityFire: boolean = false;
     private initialTargetTile: any;
     private state: EnterTransportState;
     private queueingNode?: QueueingNode;

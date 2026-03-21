@@ -33,7 +33,7 @@ export class PlaceBuildingAction extends Action {
     }
     serialize(): Uint8Array {
         const stream = new DataStream(8);
-        stream.writeUint32(this.buildingRules.index);
+        stream.writeUint32((this.buildingRules as any).index);
         stream.writeUint16(this.tile.x);
         stream.writeUint16(this.tile.y);
         return stream.toUint8Array();
@@ -62,7 +62,7 @@ export class PlaceBuildingAction extends Action {
             console.warn(`Tile ${this.tile.x},${this.tile.y} doesn't exist`);
         }
     }
-    private tryPlaceBuilding(player: Player, tile: Tile): GameObject | undefined {
+    private tryPlaceBuilding(player: Player, tile: Tile): any {
         const buildingRules = this.buildingRules;
         if (player.production) {
             const queue = player.production.getQueueForObject(buildingRules);
@@ -70,8 +70,8 @@ export class PlaceBuildingAction extends Action {
                 const worker = this.game.getConstructionWorker(player);
                 if (player.production.isAvailableForProduction(buildingRules) &&
                     worker.canPlaceAt(buildingRules.name, tile, { normalizedTile: true })) {
-                    const placed = worker.placeAt(buildingRules.name, tile, true);
-                    player.addUnitsBuilt(buildingRules, 1);
+                    const placed = worker.placeAt(buildingRules.name, tile, true) as any[];
+                    player.addUnitsBuilt(buildingRules as any, 1);
                     queue.shift(buildingRules, 1);
                     const factory = player.production.getPrimaryFactory(FactoryType.BuildingType);
                     if (factory) {

@@ -1,14 +1,15 @@
 import { AnimProps } from "@/engine/AnimProps";
 import { ImageFinder, MissingImageError } from "@/engine/ImageFinder";
 import { ShpAggregator } from "@/engine/renderable/builder/ShpAggregator";
+import { ShpFile } from "@/data/ShpFile";
+import { BuildingAnimArtProps } from "./BuildingAnimArtProps";
+import { BuildingAnimData } from "./BuildingAnimData";
 export class BuildingShpHelper {
     constructor(private imageFinder: ImageFinder) { }
     getShpFrameInfos(building: {
         hasShadow: boolean;
-    }, mainShp: string | undefined, turretShp: string | undefined, animShps: Map<{
-        art: any;
-    }, string>): Map<string, any> {
-        const frameInfos = new Map<string, any>();
+    }, mainShp: ShpFile | undefined, turretShp: ShpFile | undefined, animShps: Map<BuildingAnimData, ShpFile>): Map<ShpFile, any> {
+        const frameInfos = new Map<ShpFile, any>();
         if (mainShp) {
             frameInfos.set(mainShp, ShpAggregator.getShpFrameInfo(mainShp, building.hasShadow));
         }
@@ -22,21 +23,13 @@ export class BuildingShpHelper {
         }
         return frameInfos;
     }
-    collectAnimShpFiles(anims: {
-        getAll(): Map<string, Array<{
-            image: string;
-        }>>;
-    }, options: {
+    collectAnimShpFiles(anims: BuildingAnimArtProps, options: {
         useTheaterExtension: boolean;
-    }): Map<{
-        image: string;
-    }, any> {
-        const shpFiles = new Map<{
-            image: string;
-        }, any>();
+    }): Map<BuildingAnimData, ShpFile> {
+        const shpFiles = new Map<BuildingAnimData, ShpFile>();
         anims.getAll().forEach((animList) => {
             for (const anim of animList) {
-                let shpFile;
+                let shpFile: ShpFile;
                 try {
                     shpFile = this.imageFinder.find(anim.image, options.useTheaterExtension);
                 }

@@ -2,7 +2,7 @@ import { CompositeDisposable } from '../util/disposable/CompositeDisposable';
 import { setupFullScreenChangeListener } from '../util/fullScreen';
 import { EventDispatcher } from '../util/event';
 type ScreenOrientationWithLock = ScreenOrientation & {
-    lock?: (orientation: OrientationLockType) => Promise<void>;
+    lock?: (orientation: string) => Promise<void>;
     unlock?: () => void;
 };
 export interface HotKey {

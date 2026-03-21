@@ -122,7 +122,7 @@ export class Projectile extends GameObject {
         }
         game.afterTick(() => {
             const rangeHelper = new RangeHelper(this.tileOccupation);
-            const tileDistance = rangeHelper.distance2(this.target.getWorldCoords(), this) / Coords.LEPTONS_PER_TILE;
+            const tileDistance = rangeHelper.distance2(this.target.getWorldCoords(), this as any) / Coords.LEPTONS_PER_TILE;
             this.initialTileDistToTarget = tileDistance;
             this.maxSpeed = this.computeMaxSpeed(this.fromWeapon.speed, tileDistance, game.rules.audioVisual.gravity);
         });
@@ -141,7 +141,7 @@ export class Projectile extends GameObject {
                     !targetObj.isDestroyed &&
                     targetObj.veteranLevel === VeteranLevel.Elite &&
                     !targetObj.unitOrderTrait.hasTasks()) {
-                    targetObj.unitOrderTrait.addTask(new ScatterTask(game));
+                        targetObj.unitOrderTrait.addTask(new ScatterTask(game, undefined, undefined));
                 }
             }
         }
@@ -305,7 +305,7 @@ export class Projectile extends GameObject {
                 return;
             }
             const rangeHelper = new RangeHelper(this.tileOccupation);
-            const tileDistance = Math.floor(rangeHelper.distance2(targetPos, this) / Coords.LEPTONS_PER_TILE);
+            const tileDistance = Math.floor(rangeHelper.distance2(targetPos, this as any) / Coords.LEPTONS_PER_TILE);
             const shouldTurn = tileDistance > 2 && this.iniRot > 1;
             const toTarget = targetPos.clone().sub(this.position.worldPosition);
             let verticalAdjustment = 0;

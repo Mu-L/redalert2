@@ -27,6 +27,7 @@ interface Building {
         naval: boolean;
     };
     helipadTrait?: any;
+    dockTrait?: any;
     unitOrderTrait?: any;
     unitRepairTrait?: any;
     warpedOutTrait: {

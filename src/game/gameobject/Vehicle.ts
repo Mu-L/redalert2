@@ -55,7 +55,7 @@ export class Vehicle extends Techno {
     public isFiring: boolean = false;
     public zone: ZoneType;
     public rocking?: RockingState;
-    public moveTrait!: MoveTrait;
+    declare public moveTrait: MoveTrait;
     public crashableTrait?: CrashableTrait;
     public crewedTrait?: CrewedTrait;
     public harvesterTrait?: HarvesterTrait;

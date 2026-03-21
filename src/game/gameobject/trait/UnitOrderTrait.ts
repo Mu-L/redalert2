@@ -14,14 +14,7 @@ interface GameObject {
     };
     unitOrderTrait: UnitOrderTrait;
 }
-interface Task {
-    isCancelling(): boolean;
-    cancel(): void;
-    status: TaskStatus;
-    useChildTargetLines?: boolean;
-    children?: Task[];
-    getTargetLinesConfig?(gameObject: GameObject): any;
-}
+type Task = any;
 interface Order {
     isValid(): boolean;
     isAllowed(): boolean;

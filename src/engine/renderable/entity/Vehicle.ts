@@ -316,149 +316,167 @@ export class Vehicle {
                     void 0 !== this.lastVeteranLevel &&
                     this.highlightAnimRunner.animate(30),
                     (this.lastVeteranLevel = this.gameObject.veteranLevel));
-        var e = this.gameObject.tile.z + this.gameObject.tileElevation, t = void 0 === this.lastElevation || this.lastElevation !== e;
-        t &&
-            ((this.lastElevation = e),
+        const elevation = this.gameObject.tile.z + this.gameObject.tileElevation;
+        const elevationChanged = void 0 === this.lastElevation || this.lastElevation !== elevation;
+        elevationChanged &&
+            ((this.lastElevation = elevation),
                 this.updateBaseLight(),
                 this.updateClippingPlanes(this.gameObject.tile.z));
-        var s = this.gameObject.invulnerableTrait.isActive(), a = s !== this.lastInvulnerable;
-        this.lastInvulnerable = s;
-        var n = this.highlightAnimRunner.shouldUpdate();
-        n && this.highlightAnimRunner.tick(i),
-            s && a && this.invulnAnimRunner.animate(),
+        const isInvulnerable = this.gameObject.invulnerableTrait.isActive();
+        const invulnerableChanged = isInvulnerable !== this.lastInvulnerable;
+        this.lastInvulnerable = isInvulnerable;
+        const highlightNeedsUpdate = this.highlightAnimRunner.shouldUpdate();
+        highlightNeedsUpdate && this.highlightAnimRunner.tick(i),
+            isInvulnerable && invulnerableChanged && this.invulnAnimRunner.animate(),
             this.invulnAnimRunner.shouldUpdate() &&
                 this.invulnAnimRunner.tick(i);
-        var o = this.gameObject.warpedOutTrait.isActive(), l = o !== this.lastWarpedOut;
-        this.lastWarpedOut = o;
-        var c = this.gameObject.cloakableTrait?.isCloaked(), h = c !== this.lastCloaked;
-        this.lastCloaked = c;
-        let u = this.gameObject.submergibleTrait?.isSubmerged();
-        e = u !== this.lastSubmerged;
-        if (((this.lastSubmerged = u), l || h || e)) {
-            let t = o || c || u ? 0.5 : 1;
-            this.shpRenderable?.setOpacity(t),
-                this.shpRenderable?.setFlat(!!u),
+        const isWarpedOut = this.gameObject.warpedOutTrait.isActive();
+        const warpedOutChanged = isWarpedOut !== this.lastWarpedOut;
+        this.lastWarpedOut = isWarpedOut;
+        const isCloaked = this.gameObject.cloakableTrait?.isCloaked();
+        const cloakedChanged = isCloaked !== this.lastCloaked;
+        this.lastCloaked = isCloaked;
+        const isSubmerged = this.gameObject.submergibleTrait?.isSubmerged();
+        const submergedChanged = isSubmerged !== this.lastSubmerged;
+        if (((this.lastSubmerged = isSubmerged), warpedOutChanged || cloakedChanged || submergedChanged)) {
+            const opacity = isWarpedOut || isCloaked || isSubmerged ? 0.5 : 1;
+            this.shpRenderable?.setOpacity(opacity),
+                this.shpRenderable?.setFlat(!!isSubmerged),
                 this.vxlBuilders.forEach((e) => {
-                    e.setOpacity(t), e.setShadow(!u);
+                    e.setOpacity(opacity), e.setShadow(!isSubmerged);
                 }),
-                this.placeholder?.setOpacity(t);
+                this.placeholder?.setOpacity(opacity);
         }
-        if (((t || a || s || n) &&
-            ((p = s ? this.invulnAnimRunner.getValue() : 0),
-                (y = (n ? this.highlightAnimRunner.getValue() : 0) || p),
-                (m = this.lighting.getAmbientIntensity()),
-                A.ExtraLightHelper.multiplyVxl(this.vxlExtraLight, this.baseVxlExtraLight, m, y),
-                A.ExtraLightHelper.multiplyShp(this.shpExtraLight, this.baseShpExtraLight, y)),
-            this.gameObject.isDestroyed && this.resolveObjectRemove)) {
+        if (elevationChanged || invulnerableChanged || isInvulnerable || highlightNeedsUpdate) {
+            const invulnerableLight = isInvulnerable ? this.invulnAnimRunner.getValue() : 0;
+            const highlightLight = (highlightNeedsUpdate ? this.highlightAnimRunner.getValue() : 0) || invulnerableLight;
+            const ambientIntensity = this.lighting.getAmbientIntensity();
+            A.ExtraLightHelper.multiplyVxl(this.vxlExtraLight, this.baseVxlExtraLight, ambientIntensity, highlightLight),
+                A.ExtraLightHelper.multiplyShp(this.shpExtraLight, this.baseShpExtraLight, highlightLight);
+        }
+        if (this.gameObject.isDestroyed && this.resolveObjectRemove) {
             if ((this.squidGrabAnim &&
                 (this.posObj?.remove(this.squidGrabAnim.get3DObject()),
                     this.squidGrabAnim.dispose(),
                     (this.squidGrabAnim = void 0)),
                 this.destroyStartTime || (this.destroyStartTime = i),
                 this.isSinker())) {
-                var d = (i - this.destroyStartTime) / 3e3, g = 1 <= d;
-                g
+                const sinkProgress = (i - this.destroyStartTime) / 3e3;
+                const sinkFinished = 1 <= sinkProgress;
+                sinkFinished
                     ? (this.mainObj.visible = !1)
                     : (this.objectRules.naval &&
-                        (this.mainObj.rotation.x = (Math.PI / 4) * d),
+                        (this.mainObj.rotation.x = (Math.PI / 4) * sinkProgress),
                         (this.mainObj.position.y =
-                            -16 * S.Coords.ISO_WORLD_SCALE * d),
+                            -16 * S.Coords.ISO_WORLD_SCALE * sinkProgress),
                         (this.mainObj.position.z =
-                            8 * S.Coords.ISO_WORLD_SCALE * d),
+                            8 * S.Coords.ISO_WORLD_SCALE * sinkProgress),
                         this.mainObj.updateMatrix());
-                let e = !1;
+                let wakesFinished = !1;
                 this.sinkWakeAnims.forEach((e) => e.update(i)),
                     this.sinkWakeAnims.filter((e) => !e.isAnimFinished())
                         .length ||
                         (this.sinkWakeAnims.forEach((e) => this.get3DObject().remove(e.get3DObject())),
                             (this.sinkWakeAnims.length = 0),
-                            (e = !0)),
-                    g && e && this.resolveObjectRemove();
+                            (wakesFinished = !0)),
+                    sinkFinished && wakesFinished && this.resolveObjectRemove();
             }
         }
         else if (!this.gameObject.warpedOutTrait.isActive()) {
-            let e = (Math.floor(this.gameObject.direction +
+            let direction = (Math.floor(this.gameObject.direction +
                 this.gameObject.spinVelocity * r) +
                 360) %
                 360;
-            var p = e !== this.lastDirection;
-            p &&
+            const directionChanged = direction !== this.lastDirection;
+            directionChanged &&
                 void 0 !== this.lastDirection &&
                 this.objectArt.isVoxel &&
                 this.gameObject.zone === M.ZoneType.Air &&
-                ((T = e - this.lastDirection),
-                    void 0 !== this.lastDirectionDelta &&
-                        Math.abs(T) < 2 &&
-                        Math.abs(this.lastDirectionDelta) < 2 &&
-                        Math.sign(T) !== Math.sign(this.lastDirectionDelta)
-                        ? (e = this.lastDirection)
-                        : (this.lastDirectionDelta = T)),
-                (this.lastDirection = e);
-            var m = this.gameObject.owner.color;
-            this.lastOwnerColor !== m &&
-                (this.palette.remap(m),
-                    (this.lastOwnerColor = m),
+                (() => {
+                    const directionDelta = direction - this.lastDirection;
+                    const previousDirectionDelta = this.lastDirectionDelta;
+                    if (void 0 !== previousDirectionDelta &&
+                        Math.abs(directionDelta) < 2 &&
+                        Math.abs(previousDirectionDelta) < 2 &&
+                        Math.sign(directionDelta) !== Math.sign(previousDirectionDelta)) {
+                        direction = this.lastDirection;
+                    }
+                    else {
+                        this.lastDirectionDelta = directionDelta;
+                    }
+                })(),
+                (this.lastDirection = direction);
+            const ownerColor = this.gameObject.owner.color;
+            this.lastOwnerColor !== ownerColor &&
+                (this.palette.remap(ownerColor),
+                    (this.lastOwnerColor = ownerColor),
                     this.vxlBuilders.forEach((e) => e.setPalette(this.palette)),
                     this.shpRenderable?.setPalette(this.palette),
                     this.placeholder?.setPalette(this.palette));
-            var f, y = this.gameObject.isMoving ||
+            const isMoving = this.gameObject.isMoving ||
                 (!this.objectArt.isVoxel &&
-                    !!this.gameObject.spinVelocity), d = this.gameObject.isFiring, g = void 0 === this.lastMoving || this.lastMoving !== y, T = void 0 === this.lastFiring || this.lastFiring !== d;
-            if (0 < r && (y || g)) {
-                let e = this.gameObject.moveTrait.velocity.clone(), t = e.multiplyScalar(r);
-                m = t.add(this.gameObject.position.worldPosition);
-                this.setPosition(m);
+                    !!this.gameObject.spinVelocity);
+            const isFiring = this.gameObject.isFiring;
+            const movingChanged = void 0 === this.lastMoving || this.lastMoving !== isMoving;
+            const firingChanged = void 0 === this.lastFiring || this.lastFiring !== isFiring;
+            if (0 < r && (isMoving || movingChanged)) {
+                const velocity = this.gameObject.moveTrait.velocity.clone();
+                const movementDelta = velocity.multiplyScalar(r);
+                const interpolatedPosition = movementDelta.add(this.gameObject.position.worldPosition);
+                this.setPosition(interpolatedPosition);
             }
-            (g || T) &&
-                ((this.lastMoving = y),
-                    (this.lastFiring = d),
+            (movingChanged || firingChanged) &&
+                ((this.lastMoving = isMoving),
+                    (this.lastFiring = isFiring),
                     this.objectArt.isVoxel ||
-                        this.updateShapeAnimation(y, d));
-            let t;
+                        this.updateShapeAnimation(isMoving, isFiring));
+            let turretChanged;
             if (this.gameObject.rules.isChargeTurret) {
-                if (T && d) {
+                if (firingChanged && isFiring) {
                     this.chargeTurretRunner = new x.SimpleRunner();
-                    let e = new C.AnimProps(new E.IniSection("dummy"), this.gameObject.rules.turretCount);
-                    (e.reverse = !0), (e.rate = 5);
-                    var v = new w.Animation(e, this.gameSpeed);
-                    this.chargeTurretRunner.animation = v;
+                    const animProps = new C.AnimProps(new E.IniSection("dummy"), this.gameObject.rules.turretCount);
+                    (animProps.reverse = !0), (animProps.rate = 5);
+                    const chargeTurretAnimation = new w.Animation(animProps, this.gameSpeed);
+                    this.chargeTurretRunner.animation = chargeTurretAnimation;
                 }
                 this.chargeTurretRunner?.tick(i);
-                var b = this.chargeTurretRunner?.getCurrentFrame() ?? 0;
-                (t = b !== this.currentTurretIdx),
-                    (this.currentTurretIdx = b),
+                const chargeTurretFrame = this.chargeTurretRunner?.getCurrentFrame() ?? 0;
+                (turretChanged = chargeTurretFrame !== this.currentTurretIdx),
+                    (this.currentTurretIdx = chargeTurretFrame),
                     this.chargeTurretRunner?.animation.getState() ===
                         w.AnimationState.STOPPED &&
                         (this.chargeTurretRunner = void 0);
             }
             else
-                (t = this.gameObject.turretNo !== this.currentTurretIdx),
+                (turretChanged = this.gameObject.turretNo !== this.currentTurretIdx),
                     (this.currentTurretIdx = this.gameObject.turretNo);
             this.objectArt.isVoxel
-                ? (this.updateVxlRotation(e, p),
+                ? (this.updateVxlRotation(direction, directionChanged),
                     this.updateBodyVxl(),
-                    (v =
-                        (T = this.gameObject.rocking?.facing) !==
-                            this.lastRockingFacing),
-                    (this.lastRockingFacing = T),
-                    !v ||
-                        void 0 === T ||
-                        (0 < (f = this.gameObject.rocking.factor) &&
-                            this.startRocking(T, f, i)),
-                    (f =
-                        (b = !(!this.gameObject.parasiteableTrait?.isInfested() ||
+                    (() => {
+                        const rockingFacing = this.gameObject.rocking?.facing;
+                        const rockingFacingChanged = rockingFacing !== this.lastRockingFacing;
+                        this.lastRockingFacing = rockingFacing;
+                        if (rockingFacingChanged && void 0 !== rockingFacing) {
+                            const rockingFactor = this.gameObject.rocking.factor;
+                            0 < rockingFactor &&
+                                this.startRocking(rockingFacing, rockingFactor, i);
+                        }
+                        const squidGrabbed = !!(!(!this.gameObject.parasiteableTrait?.isInfested() ||
                             !this.gameObject.parasiteableTrait.getParasite()
-                                ?.rules.organic)) !== this.lastSquidGrabbed),
-                    (this.lastSquidGrabbed = b),
-                    this.updateRocking(i, b),
-                    this.gameObject.turretTrait &&
-                        1 < this.objectRules.turretCount &&
-                        t &&
-                        this.updateActiveTurret(this.currentTurretIdx),
-                    this.updateSquidGrab(i, b, f, p, e, T, v))
+                                ?.rules.organic));
+                        const squidGrabChanged = squidGrabbed !== this.lastSquidGrabbed;
+                        this.lastSquidGrabbed = squidGrabbed;
+                        this.updateRocking(i, squidGrabbed),
+                            this.gameObject.turretTrait &&
+                                1 < this.objectRules.turretCount &&
+                                turretChanged &&
+                                this.updateActiveTurret(this.currentTurretIdx),
+                            this.updateSquidGrab(i, squidGrabbed, squidGrabChanged, directionChanged, direction, rockingFacing, rockingFacingChanged);
+                    })())
                 : this.shpAnimRunner &&
                     (this.shpAnimRunner.tick(i),
-                        this.updateShapeFrame(e, y, d));
+                        this.updateShapeFrame(direction, isMoving, isFiring));
         }
     }
     updateVxlRotation(e: number, t: boolean) {
@@ -773,32 +791,33 @@ export class Vehicle {
             }
         }
         else {
-            let e = new f.MapSpriteTranslation(1, 1);
-            var { spriteOffset: d, anchorPointWorld: g } = e.compute(), d = this.computeSpriteAnchorOffset(d);
-            let i;
+            const spriteTranslation = new f.MapSpriteTranslation(1, 1);
+            const { spriteOffset, anchorPointWorld } = spriteTranslation.compute();
+            const drawOffset = this.computeSpriteAnchorOffset(spriteOffset);
+            let image;
             try {
-                i = this.imageFinder.findByObjectArt(this.objectArt);
+                image = this.imageFinder.findByObjectArt(this.objectArt);
             }
             catch (e) {
                 if (!(e instanceof MissingImageError))
                     throw e;
                 console.warn(`<${this.gameObject.name}>: ` + e.message);
             }
-            if (i) {
-                let e = (this.shpRenderable = p.ShpRenderable.factory(i, this.palette, this.camera, d, this.objectArt.hasShadow));
-                e.setBatched(this.useSpriteBatching),
+            if (image) {
+                let shpRenderable = (this.shpRenderable = p.ShpRenderable.factory(image, this.palette, this.camera, drawOffset, this.objectArt.hasShadow));
+                shpRenderable.setBatched(this.useSpriteBatching),
                     this.useSpriteBatching &&
-                        e.setBatchPalettes(this.paletteRemaps),
-                    e.create3DObject(),
-                    n.add(e.get3DObject()),
-                    (n.position.x = g.x),
-                    (n.position.z = g.y),
+                        shpRenderable.setBatchPalettes(this.paletteRemaps),
+                    shpRenderable.create3DObject(),
+                    n.add(shpRenderable.get3DObject()),
+                    (n.position.x = anchorPointWorld.x),
+                    (n.position.z = anchorPointWorld.y),
                     n.updateMatrix();
-                let t = new C.AnimProps(new E.IniSection("dummy"), i);
-                t.loopCount = -1;
-                g = new w.Animation(t, this.gameSpeed);
+                let animProps = new C.AnimProps(new E.IniSection("dummy"), image);
+                animProps.loopCount = -1;
+                const shpAnimation = new w.Animation(animProps, this.gameSpeed);
                 (this.shpAnimRunner = new x.SimpleRunner()),
-                    (this.shpAnimRunner.animation = g);
+                    (this.shpAnimRunner.animation = shpAnimation);
             }
             else
                 n.add(this.createPlaceholder());
@@ -885,7 +904,7 @@ export class Vehicle {
                 this.gameObject.rules.naval ||
                     this.updateClippingPlanes(this.gameObject.tile.z, !0);
             }
-            return new Promise((e) => (this.resolveObjectRemove = e));
+            return new Promise<void>((resolve) => (this.resolveObjectRemove = resolve));
         }
     }
     dispose() {

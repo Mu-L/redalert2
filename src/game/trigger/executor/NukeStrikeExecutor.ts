@@ -1,6 +1,7 @@
 import { SuperWeaponsTrait } from '@/game/trait/SuperWeaponsTrait';
 import { SuperWeaponType } from '@/game/type/SuperWeaponType';
 import { TriggerExecutor } from '@/game/trigger/TriggerExecutor';
+type Game = any;
 export class NukeStrikeExecutor extends TriggerExecutor {
     execute(game: Game): void {
         const waypoint = this.action.params[6];

@@ -1,11 +1,12 @@
 import { Rules } from './rules/Rules';
 import { Art } from './art/Art';
 import { IniFile } from '../data/IniFile';
+import { MapFile } from '../data/MapFile';
 import { Country } from './Country';
 import { ObjectFactory } from './gameobject/ObjectFactory';
 import { World } from './World';
 import { GameMap } from './GameMap';
-import { GameOpts } from './gameopts/GameOpts';
+import { GameOpts, HumanPlayerInfo, AiPlayerInfo } from './gameopts/GameOpts';
 import { OBS_COUNTRY_ID, RANDOM_COUNTRY_ID, RANDOM_COLOR_ID, RANDOM_START_POS } from './gameopts/constants';
 import { isNotNullOrUndefined } from '../util/typeGuard';
 import { Alliances } from './Alliances';
@@ -39,23 +40,7 @@ interface GameMode {
     type: string;
 }
 interface GameModeRegistry {
-    getById(modeId: string): GameMode;
-}
-interface PlayerInfo {
-    countryId: string;
-    colorId: string;
-    startPos: number;
-    name?: string;
-}
-interface HumanPlayerInfo extends PlayerInfo {
-    name: string;
-}
-interface AiPlayerInfo extends PlayerInfo {
-    difficulty: string;
-}
-interface GameCreationOptions {
-    artOverrides?: IniFile;
-    specialFlags: string[];
+    getById(modeId: any): GameMode;
 }
 interface StartingLocations {
     [key: number]: any;
@@ -64,23 +49,23 @@ interface MultiplayerCountry {
     name: string;
 }
 export class GameFactory {
-    static create(gameOptions: GameCreationOptions, mapData: any, baseRules: IniFile, baseArt: IniFile, aiConfig: any, modRules: IniFile, additionalRules: IniFile[], randomSeed1: number | string, randomSeed2: number, gameOpts: GameOpts, gameModeRegistry: GameModeRegistry, skipStalemate: boolean, botConfig: any, debugFlags: any, speedCheat: any, debugBotIndex?: any, actionLogger?: any): Game {
+    static create(mapFile: MapFile, mapData: any, baseRules: IniFile, baseArt: IniFile, aiConfig: any, modRules: IniFile, additionalRules: IniFile[], randomSeed1: number | string, randomSeed2: number, gameOpts: GameOpts, gameModeRegistry: GameModeRegistry, skipStalemate: boolean, botConfig: any, debugFlags: any, speedCheat: any, debugBotIndex?: any, actionLogger?: any): Game {
         const mergedRules: IniFile = baseRules.clone().mergeWith(modRules);
         for (const additionalRule of additionalRules) {
             mergedRules.mergeWith(additionalRule);
         }
-        mergedRules.mergeWith(gameOptions);
-        const mergedArt: IniFile = baseArt.clone().mergeWith(gameOptions.artOverrides ?? new IniFile());
+        mergedRules.mergeWith(mapFile);
+        const mergedArt: IniFile = baseArt.clone().mergeWith(mapFile.artOverrides ?? new IniFile());
         const rules: Rules = new Rules(mergedRules, debugFlags);
-        const art: Art = new Art(rules, mergedArt, gameOptions, debugFlags);
+        const art: Art = new Art(rules, mergedArt, mapFile, debugFlags);
         const ai: Ai = new Ai(aiConfig);
-        rules.applySpecialFlags(gameOptions.specialFlags);
+        rules.applySpecialFlags((mapFile.specialFlags as any) ?? {});
         GameOptSanitizer.sanitize(gameOpts, rules);
         const baseMultiplayerRules: Rules = new Rules(baseRules);
         const multiplayerCountries: MultiplayerCountry[] = baseMultiplayerRules.getMultiplayerCountries();
-        const multiplayerColors: string[] = [...baseMultiplayerRules.getMultiplayerColors().values()];
+        const multiplayerColors = [...baseMultiplayerRules.getMultiplayerColors().values()];
         const prng: Prng = Prng.factory(randomSeed1, randomSeed2);
-        const gameMap: GameMap = new GameMap(gameOptions, mapData, rules, prng.generateRandomInt.bind(prng));
+        const gameMap: GameMap = new GameMap(mapFile as any, mapData, rules, prng.generateRandomInt.bind(prng));
         const world: World = new World();
         const gameMode: GameMode = gameModeRegistry.getById(gameOpts.gameMode);
         const playerList: PlayerList = new PlayerList();
@@ -97,10 +82,10 @@ export class GameFactory {
         const productionTrait: ProductionTrait = game.traits.get(ProductionTrait) as ProductionTrait;
         const playerFactory: PlayerFactory = new PlayerFactory(rules, gameOpts, productionTrait.getAvailableObjects());
         const randomGen: GameOptRandomGen = GameOptRandomGen.factory(randomSeed1, randomSeed2);
-        const generatedColors: Map<PlayerInfo, string> = randomGen.generateColors(gameOpts);
-        const generatedCountries: Map<PlayerInfo, string> = randomGen.generateCountries(gameOpts, baseMultiplayerRules);
-        const generatedStartLocations: Map<PlayerInfo, number> = randomGen.generateStartLocations(gameOpts, gameMap.startingLocations);
-        const allPlayers: (HumanPlayerInfo | AiPlayerInfo)[] = [
+        const generatedColors: Map<HumanPlayerInfo | AiPlayerInfo, number> = randomGen.generateColors(gameOpts);
+        const generatedCountries: Map<HumanPlayerInfo | AiPlayerInfo, number> = randomGen.generateCountries(gameOpts, baseMultiplayerRules);
+        const generatedStartLocations: Map<HumanPlayerInfo | AiPlayerInfo, number> = randomGen.generateStartLocations(gameOpts, gameMap.startingLocations as any);
+        const allPlayers: Array<HumanPlayerInfo | AiPlayerInfo> = [
             ...gameOpts.humanPlayers,
             ...gameOpts.aiPlayers
         ].filter(isNotNullOrUndefined);
@@ -122,7 +107,7 @@ export class GameFactory {
         const mapRadiationTrait: MapRadiationTrait = new MapRadiationTrait(gameMap);
         game.mapRadiationTrait = mapRadiationTrait;
         game.traits.add(mapRadiationTrait);
-        const mapLightingTrait: MapLightingTrait = new MapLightingTrait(rules.audioVisual, gameMap.getLighting());
+        const mapLightingTrait: MapLightingTrait = new MapLightingTrait(rules.audioVisual as any, gameMap.getLighting());
         game.mapLightingTrait = mapLightingTrait;
         game.traits.add(mapLightingTrait);
         game.traits.add(new SuperWeaponsTrait());
@@ -137,36 +122,38 @@ export class GameFactory {
             game.traits.add(stalemateDetectTrait);
         }
     }
-    private static createPlayers(game: Game, allPlayers: (HumanPlayerInfo | AiPlayerInfo)[], playerFactory: PlayerFactory, multiplayerCountries: MultiplayerCountry[], multiplayerColors: string[], rules: Rules, generatedCountries: Map<PlayerInfo, string>, generatedColors: Map<PlayerInfo, string>, generatedStartLocations: Map<PlayerInfo, number>): void {
-        allPlayers.forEach((playerInfo: HumanPlayerInfo | AiPlayerInfo) => {
+    private static createPlayers(game: Game, allPlayers: Array<HumanPlayerInfo | AiPlayerInfo>, playerFactory: PlayerFactory, multiplayerCountries: MultiplayerCountry[], multiplayerColors: any[], rules: Rules, generatedCountries: Map<HumanPlayerInfo | AiPlayerInfo, number>, generatedColors: Map<HumanPlayerInfo | AiPlayerInfo, number>, generatedStartLocations: Map<HumanPlayerInfo | AiPlayerInfo, number>): void {
+        allPlayers.forEach((playerInfo) => {
             let playerName: string;
             let isAi: boolean;
-            let aiDifficulty: string | undefined;
+            let aiDifficulty: number | undefined;
             if (isHumanPlayerInfo(playerInfo)) {
-                playerName = playerInfo.name;
+                const humanPlayerInfo = playerInfo as HumanPlayerInfo;
+                playerName = humanPlayerInfo.name;
                 isAi = false;
             }
             else {
-                playerName = game.getAiPlayerName(playerInfo);
+                const aiPlayerInfo = playerInfo as AiPlayerInfo;
+                playerName = game.getAiPlayerName(aiPlayerInfo);
                 isAi = true;
-                aiDifficulty = playerInfo.difficulty;
+                aiDifficulty = aiPlayerInfo.difficulty;
             }
             if (playerInfo.countryId === OBS_COUNTRY_ID) {
                 game.addPlayer(playerFactory.createObserver(playerName, rules));
                 return;
             }
-            const resolvedCountryId: string = generatedCountries.get(playerInfo) ?? playerInfo.countryId;
-            const resolvedColorId: string = generatedColors.get(playerInfo) ?? playerInfo.colorId;
+            const resolvedCountryId: number = generatedCountries.get(playerInfo) ?? playerInfo.countryId;
+            const resolvedColorId: number = generatedColors.get(playerInfo) ?? playerInfo.colorId;
             const resolvedStartPos: number = generatedStartLocations.get(playerInfo) ?? playerInfo.startPos;
             this.validateResolvedValues(resolvedCountryId, resolvedColorId, resolvedStartPos);
-            const countryName: string = multiplayerCountries[parseInt(resolvedCountryId)].name;
-            const country: Country = Country.factory(countryName, rules);
-            const color: string = multiplayerColors[parseInt(resolvedColorId)];
+            const countryName: string = multiplayerCountries[resolvedCountryId].name;
+            const country: Country = Country.factory(countryName, rules as any);
+            const color = multiplayerColors[resolvedColorId];
             const player = playerFactory.createCombatant(playerName, country, resolvedStartPos, color, isAi, aiDifficulty);
             game.addPlayer(player);
         });
     }
-    private static validateResolvedValues(countryId: string, colorId: string, startPos: number): void {
+    private static validateResolvedValues(countryId: number, colorId: number, startPos: number): void {
         if (countryId === RANDOM_COUNTRY_ID) {
             throw new Error("Random country should have been resolved by now");
         }

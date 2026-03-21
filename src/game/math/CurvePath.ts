@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { LineCurve } from './LineCurve';
-export class CurvePath extends THREE.CurvePath<THREE.Vector3> {
+export class CurvePath extends THREE.CurvePath<THREE.Vector2> {
     closePath(): this {
         const start = this.curves[0].getPoint(0);
         const end = this.curves[this.curves.length - 1].getPoint(1);

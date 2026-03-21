@@ -47,7 +47,7 @@ export class SpawnDebrisTrait {
                 .forEach(debris => {
                 debris.position.moveToLeptons(position);
                 debris.position.tileElevation = gameObject.position.tileElevation;
-                world.spawnObject(debris, debris.position.tile);
+                world.spawnObject(debris);
             });
         }
     }

@@ -3,8 +3,8 @@ import { MeshLine, MeshLineMaterial } from 'three.meshline';
 import { Coords } from '@/game/Coords';
 import { getMeshLineResolution } from '@/engine/renderable/fx/MeshLineResolution';
 interface Camera extends THREE.Camera {
-    top: number;
-    right: number;
+    top?: number;
+    right?: number;
     rotation: THREE.Euler;
 }
 interface Container {
@@ -30,7 +30,7 @@ export class RallyPointFx {
         this.targetPos = targetPos;
         this.color = color;
         this.renderOrder = renderOrder;
-        this.cameraHash = this.camera.top + "_" + this.camera.right;
+        this.cameraHash = (this.camera.top ?? 0) + "_" + (this.camera.right ?? 0);
     }
     setContainer(container: Container): void {
         this.container = container;
@@ -61,7 +61,7 @@ export class RallyPointFx {
         if (this.wrapper) {
             this.wrapper.visible = this.visible;
         }
-        const currentCameraHash = this.camera.top + "_" + this.camera.right;
+        const currentCameraHash = (this.camera.top ?? 0) + "_" + (this.camera.right ?? 0);
         if (currentCameraHash !== this.cameraHash) {
             this.cameraHash = currentCameraHash;
             [this.lineMesh, this.shadowLineMesh].forEach((mesh) => {

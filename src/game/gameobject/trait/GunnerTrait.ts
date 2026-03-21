@@ -1,5 +1,6 @@
 import { VeteranLevel } from '@/game/gameobject/unit/VeteranLevel';
 import { NotifyTick } from './interface/NotifyTick';
+type Unit = any;
 export class GunnerTrait {
     private lastHadGunner: boolean = false;
     [NotifyTick.onTick](unit: Unit): void {

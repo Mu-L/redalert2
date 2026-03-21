@@ -1,19 +1,14 @@
 import { AnimProps } from "@/engine/AnimProps";
 import { ImageUtils } from "@/engine/gfx/ImageUtils";
+import { ShpFile } from "@/data/ShpFile";
+import { IniSection } from "@/data/IniSection";
 import * as THREE from "three";
 import * as SPELib from "shader-particle-engine";
 import { patchSpeGroup } from "./speCompat";
 interface SmokeArt {
-    art: {
-        getBool(key: string): boolean;
-    };
+    art: IniSection;
     translucent: boolean;
     translucency: number;
-}
-interface ShpFile {
-    numImages: number;
-    height: number;
-    width: number;
 }
 interface GameSpeed {
     value: number;

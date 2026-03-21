@@ -5,6 +5,6 @@ export class Unit extends Techno {
         return new this(id, rules, owner, general);
     }
     constructor(id: string, rules: any, owner: any, general: any) {
-        super(ObjectType.Unit, id, rules, owner, general);
+        super(((ObjectType as any).Unit ?? ObjectType.Vehicle) as any, id, rules, owner, general);
     }
 }

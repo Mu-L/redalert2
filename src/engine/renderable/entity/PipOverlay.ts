@@ -56,7 +56,7 @@ interface ImageHandle {
 }
 interface UnitHealthBarResult {
     healthBarWrapper: THREE.Object3D;
-    selectionBox: THREE.Mesh;
+    selectionBox: THREE.Object3D;
 }
 interface GameObject {
     isBuilding(): boolean;
@@ -192,10 +192,10 @@ export class PipOverlay {
     private invalidatedElements: (boolean | undefined)[] = [];
     private rootObj?: THREE.Object3D;
     private healthBar?: THREE.Object3D;
-    private selectionBox?: THREE.Mesh;
+    private selectionBox?: THREE.Object3D;
     private pipsSprite?: THREE.Mesh;
     private controlGroupSprite?: THREE.Mesh;
-    private primaryFactorySprite?: THREE.Mesh;
+    private primaryFactorySprite?: THREE.Object3D;
     private veteranIndicator?: THREE.Mesh;
     private rallyLine?: RallyPointFx;
     private repairWrench?: any;
@@ -693,7 +693,7 @@ export class PipOverlay {
         texture.needsUpdate = true;
         return texture;
     }
-    private createPrimaryFactorySprite(): THREE.Mesh | undefined {
+    private createPrimaryFactorySprite(): THREE.Object3D | undefined {
         if (!this.objectIsOpaqueToViewer()) {
             const color = this.gameObject.owner.color;
             if (!PipOverlay.primaryFactoryTextures.has(color.asHex())) {
@@ -701,13 +701,17 @@ export class PipOverlay {
                 PipOverlay.primaryFactoryTextures.set(color.asHex(), texture);
             }
             const texture = PipOverlay.primaryFactoryTextures.get(color.asHex())!;
+            const textureData = texture.source.data as {
+                width?: number;
+                height?: number;
+            } | null;
             const geometry = SpriteUtils.createSpriteGeometry({
                 texture,
                 camera: this.camera,
                 align: { x: 1, y: -1 },
                 offset: {
-                    x: -Math.floor(texture.image.width / 2),
-                    y: -Math.floor(texture.image.height / 2),
+                    x: -Math.floor((textureData?.width ?? 0) / 2),
+                    y: -Math.floor((textureData?.height ?? 0) / 2),
                 },
                 scale: Coords.ISO_WORLD_SCALE,
             });
@@ -832,15 +836,17 @@ export class PipOverlay {
         this.updateDebugLabel();
         if (this.lastSelectionLevel === undefined || this.lastSelectionLevel !== selectionLevel) {
             this.lastSelectionLevel = selectionLevel;
-            const elementMap = new Map([
+            const elementMap: Array<[number, {
+                visible: boolean;
+            } | undefined]> = [
                 [0, this.healthBar],
                 [2, this.selectionBox],
                 [1, this.pipsSprite],
                 [3, this.controlGroupSprite],
                 [4, this.primaryFactorySprite],
                 [5, this.rallyLine],
-            ]);
-            elementMap.forEach((element, index) => {
+            ];
+            elementMap.forEach(([index, element]) => {
                 if (element) {
                     element.visible = selectionLevel >= SELECTION_LEVEL_MAP[index];
                 }

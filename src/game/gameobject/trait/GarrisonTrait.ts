@@ -4,6 +4,9 @@ import { NotifyDamage } from './interface/NotifyDamage';
 import { fnv32a } from '@/util/math';
 import { BuildingEvacuateEvent } from '@/game/event/BuildingEvacuateEvent';
 import { ScatterTask } from '@/game/gameobject/task/ScatterTask';
+type Building = any;
+type Unit = any;
+type GameContext = any;
 export class GarrisonTrait {
     private building: Building;
     private evacThreshold: number;

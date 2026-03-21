@@ -1,5 +1,6 @@
 import { TriggerSoundFxEvent } from '@/game/event/TriggerSoundFxEvent';
 import { TriggerExecutor } from '@/game/trigger/TriggerExecutor';
+type Game = any;
 export class PlaySoundFxAtExecutor extends TriggerExecutor {
     execute(game: Game): void {
         const soundIndex = this.action.params[1];

@@ -47,15 +47,14 @@ export class SoundSpecs {
             };
             let soundListSection = this.ini.getSection("SoundList");
             if (soundListSection) {
-                for (let soundName of new Set(soundListSection.entries.values())) {
-                    if (soundName) {
-                        let soundSection = this.ini.getSection(soundName);
-                        if (soundSection) {
-                            this.specs.set(soundName, new SoundSpec().read(soundSection, this.defaults));
-                        }
-                        else {
-                            console.warn(`Missing sound section [${soundName}]`);
-                        }
+                const soundNames = new Set<string>([...soundListSection.entries.values()].filter((value: unknown): value is string => typeof value === "string" && value.length > 0));
+                for (let soundName of soundNames) {
+                    let soundSection = this.ini.getSection(soundName);
+                    if (soundSection) {
+                        this.specs.set(soundName, new SoundSpec().read(soundSection, this.defaults));
+                    }
+                    else {
+                        console.warn(`Missing sound section [${soundName}]`);
                     }
                 }
             }

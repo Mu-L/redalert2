@@ -95,7 +95,7 @@ export class SharedDetectDisguiseTrait {
         return game.map.technosByTile.queryRange(new Box2(minPoint, maxPoint));
     }
     private detect(entity: any, game: any) {
-        const detectedOwners = new Set();
+        const detectedOwners = new Set<any>();
         const rangeHelper = new RangeHelper(game.map.tileOccupation);
         for (const detector of this.detectors) {
             if (!game.areFriendly(detector, entity)) {

@@ -30,7 +30,7 @@ interface GameObject {
     owner: any;
     crusher: boolean;
     spinVelocity: number;
-    traits: any[];
+    traits: any;
     turretTrait?: any;
     attackTrait?: any;
     unitOrderTrait: any;
@@ -59,7 +59,7 @@ interface GameState {
     map: any;
     rules: any;
     events: any;
-    traits: any[];
+    traits: any;
     crateGeneratorTrait: any;
     areFriendly(a: GameObject, b: GameObject): boolean;
     destroyObject(obj: GameObject, source: any): void;

@@ -5,9 +5,12 @@ export abstract class Action {
     constructor(actionType: ActionType) {
         this.actionType = actionType;
     }
-    abstract unserialize(data: any): void;
+    unserialize(_data: any): void {
+    }
     serialize(): Uint8Array {
         return new Uint8Array();
+    }
+    process(): void {
     }
     print(): string {
         return "";

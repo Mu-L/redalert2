@@ -1,7 +1,7 @@
 import { MoveTask } from "@/game/gameobject/task/move/MoveTask";
 export class MoveOutsideTask extends MoveTask {
     private target: any;
-    private cancellable: boolean = false;
+    public cancellable: boolean = false;
     constructor(game: any, target: any, targetTile?: any) {
         super(game, targetTile ?? target.tile, false, { ignoredBlockers: [target] });
         this.target = target;

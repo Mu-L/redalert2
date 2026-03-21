@@ -45,7 +45,7 @@ export class BotManager {
             bot.setGameApi(this.gameApi);
             bot.setActionsApi(new ActionsApi(game, this.actionFactory, this.actionQueue, bot));
             bot.setProductionApi(new ProductionApi(game.getPlayerByName(bot.name).production));
-            bot.setLogger(new LoggerApi(AppLogger.get(bot.name), this.gameApi));
+            bot.setLogger(new LoggerApi(AppLogger.get(bot.name) as any, this.gameApi as any));
             bot.onGameStart(this.gameApi);
         }
     }

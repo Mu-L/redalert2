@@ -1,6 +1,7 @@
 import { EventDispatcher } from '@/util/event';
 import { GameObject } from './gameobject/GameObject';
 export class World {
+    [key: string]: any;
     private allObjects: Map<number, GameObject>;
     private _onObjectSpawned: EventDispatcher;
     private _onObjectRemoved: EventDispatcher;

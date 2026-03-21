@@ -3,8 +3,8 @@ import { MeshLine, MeshLineMaterial } from 'three.meshline';
 import { Coords } from '@/game/Coords';
 import { getMeshLineResolution } from '@/engine/renderable/fx/MeshLineResolution';
 interface Camera {
-    top: number;
-    right: number;
+    top?: number;
+    right?: number;
     rotation: THREE.Euler;
 }
 interface Container {

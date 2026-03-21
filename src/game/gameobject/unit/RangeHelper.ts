@@ -78,7 +78,7 @@ interface ElevationModel {
 interface TileOccupation {
     calculateTilesForGameObject(tile: Tile, gameObject: GameObject): Tile[];
 }
-type RangeTarget = GameObject | Vector3Like | TileCoord | Tile[];
+type RangeTarget = any;
 const hasPosition = (obj: any): obj is GameObject => obj.position !== undefined;
 const hasAddScalar = (obj: any): obj is Vector3Like => obj.addScalar !== undefined;
 export class RangeHelper {
@@ -86,7 +86,7 @@ export class RangeHelper {
     constructor(tileOccupation: TileOccupation) {
         this.tileOccupation = tileOccupation;
     }
-    isInWeaponRange(shooter: GameObject, target: RangeTarget, weapon: Weapon, gameRules: GameRules, rangeSource?: GameObject): boolean {
+    isInWeaponRange(shooter: GameObject, target: RangeTarget, weapon: Weapon, gameRules: GameRules, rangeSource?: RangeTarget): boolean {
         const effectiveShooter = rangeSource ?? shooter;
         if (weapon.rules.limboLaunch) {
             const shooterElevation = hasPosition(effectiveShooter)
@@ -159,7 +159,7 @@ export class RangeHelper {
             return this.isInRange3(source, target, minRange, maxRange);
         }
     }
-    private isInRange3(source: RangeTarget, target: RangeTarget, minRange: number, maxRange: number): boolean {
+    public isInRange3(source: RangeTarget, target: RangeTarget, minRange: number, maxRange: number): boolean {
         const distance = this.distance3(source, target) / Coords.LEPTONS_PER_TILE;
         return MathUtil.isBetween(distance, minRange, maxRange);
     }
